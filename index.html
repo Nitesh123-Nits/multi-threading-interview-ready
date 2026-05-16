@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Concurrency Masterclass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d1a;--surface:#12121f;--card:rgba(255,255,255,0.04);
+  --border:rgba(255,255,255,0.08);--purple:#7c6af7;--teal:#00d4aa;
+  --pink:#f472b6;--yellow:#fbbf24;--text:#e2e8f0;--muted:#94a3b8;
+  --sidebar:220px;--editor-bg:#1e1e2e;--editor-header:#2d2d3f;
+  --toggle-icon:'🌙';
+}
+body.light-mode{
+  --bg:#f4f6fc;--surface:#ffffff;--card:rgba(0,0,0,0.03);
+  --border:rgba(0,0,0,0.1);--text:#1a1a2e;--muted:#5a6278;
+  --editor-bg:#f8f8ff;--editor-header:#eaeaf8;
+}
+body.light-mode ::-webkit-scrollbar-track{background:#e8e8f4}
+body.light-mode .theory{background:rgba(124,106,247,0.06);border-color:rgba(124,106,247,0.2)}
+body.light-mode .theory-col{background:rgba(0,0,0,0.04)}
+body.light-mode .theory li{color:#3a4060}
+body.light-mode .editor{box-shadow:0 8px 32px rgba(0,0,0,0.1),0 0 0 1px rgba(0,0,0,0.08)}
+body.light-mode .line-numbers{background:rgba(0,0,0,0.04);border-right-color:rgba(0,0,0,0.08)}
+body.light-mode .line-numbers span{color:rgba(0,0,0,0.2)}
+body.light-mode .qa-card{background:rgba(0,0,0,0.03);border-color:rgba(0,0,0,0.1)}
+body.light-mode .qa-q-text{color:#1a1a2e}
+body.light-mode .qa-a-inner{border-top-color:rgba(0,0,0,0.1)}
+body.light-mode .hero{background:linear-gradient(135deg,rgba(124,106,247,0.1) 0%,rgba(0,212,170,0.06) 100%)}
+body.light-mode .search-bar{background:rgba(255,255,255,0.9)}
+body.light-mode .search-wrap input{background:rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.12);color:#1a1a2e}
+body.light-mode .code-content pre code{color:#24292e}
+body.light-mode .hljs-comment{color:#6a737d!important}
+body.light-mode .hljs-keyword{color:#d73a49!important}
+body.light-mode .hljs-string{color:#032f62!important}
+body.light-mode .hljs-number{color:#005cc5!important}
+body.light-mode .hljs-title{color:#6f42c1!important}
+body.light-mode .tab{background:var(--editor-bg)!important;color:#4a4a7a}
+body.light-mode .editor-header,.light-mode .editor-footer{background:var(--editor-header)!important}
+html{scroll-behavior:smooth}
+/* Theme toggle */
+#theme-toggle{width:100%;margin-top:10px;background:rgba(124,106,247,0.08);border:1px solid rgba(124,106,247,0.25);color:var(--purple);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .25s}
+#theme-toggle:hover{background:rgba(124,106,247,0.18);transform:translateY(-1px)}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;overflow-x:hidden}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--purple);border-radius:3px}
+
+/* Progress bar */
+#progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--teal));width:0%;z-index:1000;transition:width .1s}
+
+/* Sidebar */
+#sidebar{width:var(--sidebar);background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;transition:transform .3s}
+.sidebar-logo{padding:20px 16px 12px;border-bottom:1px solid var(--border)}
+.sidebar-logo h1{font-size:14px;font-weight:700;background:linear-gradient(135deg,var(--purple),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar-logo p{font-size:11px;color:var(--muted);margin-top:2px}
+.nav-section{padding:8px 0}
+.nav-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:6px 16px 4px}
+.nav-item{display:block;padding:7px 16px;font-size:13px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;transition:all .2s;cursor:pointer}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04);border-left-color:var(--purple)}
+.nav-item.active{color:var(--purple);border-left-color:var(--purple);background:rgba(124,106,247,0.1)}
+.nav-num{display:inline-block;width:18px;height:18px;background:rgba(124,106,247,0.2);color:var(--purple);border-radius:4px;font-size:10px;font-weight:700;text-align:center;line-height:18px;margin-right:6px}
+
+/* Main */
+#main{margin-left:var(--sidebar);flex:1;min-width:0}
+
+/* Hero */
+.hero{padding:60px 48px 40px;background:linear-gradient(135deg,rgba(124,106,247,0.15) 0%,rgba(0,212,170,0.08) 100%);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;right:-10%;width:500px;height:500px;background:radial-gradient(circle,rgba(124,106,247,0.15),transparent 70%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(124,106,247,0.15);border:1px solid rgba(124,106,247,0.3);color:var(--purple);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-bottom:16px}
+.hero h1{font-size:36px;font-weight:700;line-height:1.2;margin-bottom:10px}
+.hero h1 span{background:linear-gradient(135deg,var(--purple),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--muted);font-size:15px;max-width:560px;line-height:1.6;margin-bottom:24px}
+.hero-stats{display:flex;gap:32px}
+.stat{text-align:center}
+.stat-num{font-size:24px;font-weight:700;color:var(--purple)}
+.stat-lbl{font-size:12px;color:var(--muted)}
+
+/* Search */
+.search-bar{padding:12px 48px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;backdrop-filter:blur(10px)}
+.search-wrap{position:relative;max-width:500px}
+.search-wrap input{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;padding:9px 14px 9px 38px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
+.search-wrap input:focus{border-color:var(--purple)}
+.search-wrap input::placeholder{color:var(--muted)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+
+/* Content */
+#content{padding:32px 48px 80px}
+.section{margin-bottom:48px;scroll-margin-top:70px}
+.section-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px}
+.section-num{min-width:36px;height:36px;background:linear-gradient(135deg,var(--purple),#9b8afb);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.section-info h2{font-size:20px;font-weight:600;margin-bottom:4px}
+.section-info p{font-size:13px;color:var(--muted);line-height:1.5}
+.tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tag{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500}
+.tag-purple{background:rgba(124,106,247,0.15);color:var(--purple);border:1px solid rgba(124,106,247,0.2)}
+.tag-teal{background:rgba(0,212,170,0.12);color:var(--teal);border:1px solid rgba(0,212,170,0.2)}
+.tag-pink{background:rgba(244,114,182,0.12);color:var(--pink);border:1px solid rgba(244,114,182,0.2)}
+.tag-yellow{background:rgba(251,191,36,0.12);color:var(--yellow);border:1px solid rgba(251,191,36,0.2)}
+
+/* Code Editor */
+.editor{border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.06);background:var(--editor-bg)}
+.editor-header{background:var(--editor-header);padding:0 16px;display:flex;align-items:center;gap:0;border-bottom:1px solid rgba(255,255,255,0.06);min-height:38px}
+.dots{display:flex;gap:6px;margin-right:16px}
+.dot{width:12px;height:12px;border-radius:50%}
+.dot-r{background:#ff5f57}.dot-y{background:#ffbd2e}.dot-g{background:#28c840}
+.tab{display:flex;align-items:center;gap:6px;padding:0 16px;height:38px;background:var(--editor-bg);border-right:1px solid rgba(255,255,255,0.06);font-size:12px;font-family:'JetBrains Mono',monospace;color:#cdd6f4;position:relative}
+.tab::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--purple)}
+.tab-icon{color:var(--teal);font-size:11px}
+.editor-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.copy-btn{background:rgba(124,106,247,0.15);border:1px solid rgba(124,106,247,0.25);color:var(--purple);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;display:flex;align-items:center;gap:4px}
+.copy-btn:hover{background:rgba(124,106,247,0.3);transform:translateY(-1px)}
+.copy-btn.copied{background:rgba(0,212,170,0.15);border-color:rgba(0,212,170,0.3);color:var(--teal)}
+.editor-body{display:flex;overflow:auto;max-height:560px;align-items:flex-start}
+.line-numbers{padding:16px 0;background:rgba(0,0,0,0.2);min-width:48px;text-align:right;border-right:1px solid rgba(255,255,255,0.05);position:sticky;left:0;z-index:1;flex-shrink:0}
+.line-numbers span{display:block;padding:0 12px;font-size:13px;line-height:1.7;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.2);user-select:none}
+.code-content{flex:1;min-width:0}
+.code-content pre{margin:0!important;border-radius:0!important;background:transparent!important;padding:16px 20px!important;overflow:visible!important;white-space:pre!important;min-width:max-content}
+.code-content pre code{font-family:'JetBrains Mono',monospace!important;font-size:13px!important;line-height:1.7!important;background:transparent!important}
+.hljs{background:transparent!important}
+.editor-footer{background:var(--editor-header);border-top:1px solid rgba(255,255,255,0.06);padding:4px 16px;display:flex;align-items:center;gap:16px;font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.3)}
+.footer-item{display:flex;align-items:center;gap:4px}
+.footer-item .dot-status{width:6px;height:6px;border-radius:50%;background:var(--teal)}
+
+/* Q&A Cards */
+.qa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:16px}
+.qa-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s}
+.qa-card:hover{border-color:rgba(124,106,247,0.4)}
+.qa-q{padding:14px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.qa-q-text{font-size:13px;font-weight:600;color:var(--text);flex:1}
+.qa-num{font-size:11px;font-weight:700;color:var(--purple);background:rgba(124,106,247,0.15);padding:2px 8px;border-radius:4px;white-space:nowrap}
+.qa-chevron{color:var(--muted);transition:transform .3s;font-size:14px}
+.qa-card.open .qa-chevron{transform:rotate(180deg)}
+.qa-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.qa-card.open .qa-a{max-height:300px}
+.qa-a-inner{padding:0 18px 14px;font-size:13px;color:var(--muted);line-height:1.65;border-top:1px solid var(--border)}
+.qa-a-inner p{padding-top:12px}
+
+/* Theory Box */
+.theory{background:rgba(124,106,247,0.07);border:1px solid rgba(124,106,247,0.2);border-left:3px solid var(--purple);border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:13px;line-height:1.75;color:var(--text)}
+.theory h3{font-size:13px;font-weight:700;color:var(--purple);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.theory ul{padding-left:18px;margin:6px 0}
+.theory li{margin-bottom:4px;color:var(--muted)}
+.theory li strong{color:var(--text)}
+.theory .tip{background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:6px;padding:6px 10px;margin-top:8px;font-size:12px;color:var(--teal)}
+.theory code{background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--teal)}
+.theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+@media(max-width:768px){.theory-grid{grid-template-columns:1fr}}
+.theory-col{background:rgba(0,0,0,0.2);border-radius:6px;padding:8px 12px}
+.theory-col h4{font-size:11px;font-weight:700;color:var(--yellow);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+/* Back to top */
+#btt{position:fixed;bottom:32px;right:32px;background:var(--purple);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:18px;display:none;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(124,106,247,0.4);transition:all .2s;z-index:200}
+#btt:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(124,106,247,0.5)}
+#btt.show{display:flex}
+
+/* Mobile */
+#hamburger{display:none;position:fixed;top:12px;left:12px;z-index:300;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;cursor:pointer;color:var(--text)}
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  #hamburger{display:block}
+  .hero{padding:40px 20px 30px}
+  .hero h1{font-size:24px}
+  #content{padding:20px 16px 60px}
+  .search-bar{padding:10px 16px}
+  .qa-grid{grid-template-columns:1fr}
+  #btt{bottom:16px;right:16px}
+}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<button id="hamburger" onclick="toggleSidebar()">☰</button>
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <h1>☕ Java Concurrency</h1>
+    <p>Complete Masterclass</p>
+    <button id="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Fundamentals</div>
+    <a class="nav-item" onclick="goTo('s1')" ><span class="nav-num">1</span>Thread Creation</a>
+    <a class="nav-item" onclick="goTo('s2')" ><span class="nav-num">2</span>Thread Lifecycle</a>
+    <a class="nav-item" onclick="goTo('s3')" ><span class="nav-num">3</span>Volatile &amp; Visibility</a>
+    <a class="nav-item" onclick="goTo('s4')" ><span class="nav-num">4</span>Synchronized</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Locks</div>
+    <a class="nav-item" onclick="goTo('s5')" ><span class="nav-num">5</span>ReentrantLock</a>
+    <a class="nav-item" onclick="goTo('s6')" ><span class="nav-num">6</span>ReadWrite &amp; StampedLock</a>
+    <a class="nav-item" onclick="goTo('s7')" ><span class="nav-num">7</span>Condition Variables</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Synchronizers</div>
+    <a class="nav-item" onclick="goTo('s8')" ><span class="nav-num">8</span>CountDownLatch</a>
+    <a class="nav-item" onclick="goTo('s9')" ><span class="nav-num">9</span>CyclicBarrier</a>
+    <a class="nav-item" onclick="goTo('s10')" ><span class="nav-num">10</span>Semaphore</a>
+    <a class="nav-item" onclick="goTo('s11')" ><span class="nav-num">11</span>Phaser</a>
+    <a class="nav-item" onclick="goTo('s12')" ><span class="nav-num">12</span>Exchanger</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Executors &amp; Futures</div>
+    <a class="nav-item" onclick="goTo('s13')" ><span class="nav-num">13</span>ExecutorService</a>
+    <a class="nav-item" onclick="goTo('s14')" ><span class="nav-num">14</span>ScheduledExecutor</a>
+    <a class="nav-item" onclick="goTo('s15')" ><span class="nav-num">15</span>CompletableFuture</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Collections &amp; Patterns</div>
+    <a class="nav-item" onclick="goTo('s16')" ><span class="nav-num">16</span>Producer-Consumer</a>
+    <a class="nav-item" onclick="goTo('s17')" ><span class="nav-num">17</span>ConcurrentHashMap</a>
+    <a class="nav-item" onclick="goTo('s18')" ><span class="nav-num">18</span>BlockingQueue Types</a>
+    <a class="nav-item" onclick="goTo('s19')" ><span class="nav-num">19</span>Atomic Variables</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Java 21</div>
+    <a class="nav-item" onclick="goTo('s21')" ><span class="nav-num">21</span>Virtual Threads 🆕</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Interview</div>
+    <a class="nav-item" onclick="goTo('s20')" ><span class="nav-num">20</span>Interview Q&amp;A</a>
+  </div>
+</nav>
+
+<div id="main">
+  <div class="hero">
+    <div class="hero-badge">🧵 Java 17+ &amp; Java 21 Virtual Threads</div>
+    <h1>Java <span>Concurrency</span> Masterclass</h1>
+    <p>Complete guide to multithreading — thread creation, locks, synchronizers, executors, CompletableFuture, concurrent collections, and interview prep.</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">21</div><div class="stat-lbl">Topics</div></div>
+      <div class="stat"><div class="stat-num">16</div><div class="stat-lbl">Interview Q&amp;A</div></div>
+      <div class="stat"><div class="stat-num">21+</div><div class="stat-lbl">Theory Boxes</div></div>
+    </div>
+  </div>
+  <div class="search-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search topics, methods, classes..." oninput="filterSections()">
+    </div>
+  </div>
+  <div id="content">
+<!-- S1 -->
+<div class="section" id="s1" data-keywords="thread creation runnable callable lambda virtual daemon">
+<div class="section-header">
+<div class="section-num">1</div>
+<div class="section-info"><h2>Thread Creation</h2><p>All ways to create threads: Thread class, Runnable, Callable, Lambda, FutureTask, Virtual Threads (Java 21)</p>
+<div class="tags"><span class="tag tag-purple">Thread</span><span class="tag tag-teal">Runnable</span><span class="tag tag-pink">Callable</span><span class="tag tag-yellow">Java 21</span></div></div></div>
+<div class="theory">
+  <h3>🧵 Core Theory — Thread Creation</h3>
+  <ul>
+    <li><strong>Thread class:</strong> Extending <code>Thread</code> is simple but bad practice — Java only allows single inheritance, so extending Thread locks you out of extending any other class.</li>
+    <li><strong>Runnable (preferred):</strong> Implementing <code>Runnable</code> separates the task from the thread mechanism. Pass to <code>new Thread(runnable)</code>. Safer and more flexible.</li>
+    <li><strong>Callable vs Runnable:</strong> <code>Callable&lt;V&gt;</code> returns a value and can throw checked exceptions. <code>Runnable</code> returns void and cannot throw checked exceptions.</li>
+    <li><strong>FutureTask:</strong> Wraps a <code>Callable</code>, implements both <code>Runnable</code> (can be passed to Thread) and <code>Future</code> (lets you retrieve the result with <code>.get()</code>).</li>
+    <li><strong>Daemon Threads:</strong> Background threads that die automatically when all non-daemon threads finish. JVM does NOT wait for daemons on exit. Must set <code>setDaemon(true)</code> <em>before</em> <code>start()</code>.</li>
+    <li><strong>Thread Priority:</strong> Hint to the OS scheduler (1=MIN, 5=NORM, 10=MAX). Not guaranteed — OS may ignore it. Do not rely on priority for correctness.</li>
+    <li><strong>Virtual Threads (Java 21):</strong> Lightweight JVM-managed threads. Not OS threads. Millions can coexist. Ideal for I/O-bound work. Always daemon. Use <code>Thread.ofVirtual()</code> or <code>Executors.newVirtualThreadPerTaskExecutor()</code>.</li>
+  </ul>
+  <div class="tip">💡 Interview tip: "Prefer Runnable over Thread extension. Use Callable when you need a return value. Use Virtual Threads for massive I/O concurrency in Java 21."</div>
+</div>
+<div class="editor">
+  <div class="editor-header">
+    <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>ThreadCreationExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+  </div>
+  <div class="editor-body">
+    <div class="line-numbers" id="ln-s1"></div>
+    <div class="code-content"><pre><code class="language-java">// 1. Extending Thread class
+class MyThread extends Thread {
+    public MyThread(String name) { super(name); }
+    @Override
+    public void run() {
+        System.out.println("Running: " + getName() + " | Daemon=" + isDaemon());
+    }
+}
+
+// 2. Implementing Runnable (preferred — single inheritance safe)
+class MyRunnable implements Runnable {
+    @Override
+    public void run() {
+        System.out.println("Runnable on: " + Thread.currentThread().getName());
+    }
+}
+
+// 3. Lambda Runnable
+Thread t = new Thread(() -> System.out.println("Lambda thread!"), "LambdaThread");
+
+// 4. Callable — returns value + can throw checked exception
+Callable&lt;String&gt; callable = () -> {
+    Thread.sleep(500);
+    return "Callable Result";
+};
+FutureTask&lt;String&gt; ft = new FutureTask&lt;&gt;(callable);
+new Thread(ft, "CallableThread").start();
+String result = ft.get();        // blocks until done
+boolean done = ft.isDone();      // true after completion
+
+// 5. Thread Priority &amp; Daemon
+Thread low = new Thread(() -> {}, "Low");
+low.setPriority(Thread.MIN_PRIORITY);   // 1
+low.setPriority(Thread.NORM_PRIORITY);  // 5 (default)
+low.setPriority(Thread.MAX_PRIORITY);   // 10
+low.setDaemon(true);  // MUST call before start()!
+low.start();
+
+// 6. Virtual Threads (Java 21 — lightweight, millions can exist)
+Thread vt = Thread.ofVirtual().name("vt-1").start(() ->
+    System.out.println("isVirtual: " + Thread.currentThread().isVirtual())
+);
+vt.join();
+// Virtual thread executor:
+ExecutorService vtExec = Executors.newVirtualThreadPerTaskExecutor();</code></pre></div>
+  </div>
+  <div class="editor-footer">
+    <div class="footer-item"><div class="dot-status"></div>Java 21</div>
+    <div class="footer-item">UTF-8</div>
+    <div class="footer-item">Thread API</div>
+  </div>
+</div>
+</div>
+
+<!-- S2 -->
+<div class="section" id="s2" data-keywords="thread states lifecycle new runnable blocked waiting terminated join sleep interrupt yield">
+<div class="section-header">
+<div class="section-num">2</div>
+<div class="section-info"><h2>Thread Lifecycle &amp; States</h2><p>NEW → RUNNABLE → BLOCKED / WAITING / TIMED_WAITING → TERMINATED. Key methods: join, sleep, interrupt, yield</p>
+<div class="tags"><span class="tag tag-purple">States</span><span class="tag tag-teal">join()</span><span class="tag tag-pink">interrupt()</span></div></div></div>
+<div class="theory">
+  <h3>🔄 Core Theory — Thread Lifecycle &amp; States</h3>
+  <div class="theory-grid">
+    <div class="theory-col"><h4>States</h4>
+      <ul>
+        <li><strong>NEW:</strong> Created, <code>start()</code> not called yet</li>
+        <li><strong>RUNNABLE:</strong> Running or ready to run (waiting for CPU)</li>
+        <li><strong>BLOCKED:</strong> Waiting to acquire a monitor lock (e.g., entering <code>synchronized</code> block held by another thread)</li>
+        <li><strong>WAITING:</strong> Indefinitely waiting — via <code>wait()</code>, <code>join()</code>, <code>park()</code></li>
+        <li><strong>TIMED_WAITING:</strong> Waiting with a timeout — via <code>sleep()</code>, <code>wait(ms)</code>, <code>join(ms)</code></li>
+        <li><strong>TERMINATED:</strong> <code>run()</code> completed or threw an exception</li>
+      </ul>
+    </div>
+    <div class="theory-col"><h4>Key Methods</h4>
+      <ul>
+        <li><strong>join():</strong> Current thread waits for the target thread to die. Useful to ensure ordering.</li>
+        <li><strong>sleep(ms):</strong> Pauses current thread for ms milliseconds. Releases CPU but does NOT release locks.</li>
+        <li><strong>yield():</strong> Hint to scheduler to give up CPU. No guarantee. Rarely used in production.</li>
+        <li><strong>interrupt():</strong> Sets the interrupt flag. If thread is sleeping/waiting, throws <code>InterruptedException</code>. Always re-set the flag in catch block!</li>
+        <li><strong>isInterrupted():</strong> Checks flag without clearing it.</li>
+        <li><strong>Thread.interrupted():</strong> Checks AND clears the flag.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tip">💡 BLOCKED vs WAITING: BLOCKED = competing for a lock. WAITING = voluntarily waiting for a signal. Critical interview distinction!</div>
+</div>
+<div class="editor">
+  <div class="editor-header">
+    <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>ThreadLifecycle.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+  </div>
+  <div class="editor-body">
+    <div class="line-numbers" id="ln-s2"></div>
+    <div class="code-content"><pre><code class="language-java">// Thread States: NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, TERMINATED
+Object monitor = new Object();
+Thread t = new Thread(() -> {
+    synchronized (monitor) {
+        try { monitor.wait(500); }    // → TIMED_WAITING (releases lock)
+        catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+    }
+});
+
+System.out.println(t.getState()); // NEW
+t.start();
+Thread.sleep(50);
+System.out.println(t.getState()); // TIMED_WAITING
+t.join();                          // current thread waits for t to die
+System.out.println(t.getState()); // TERMINATED
+
+// Key Thread API Methods:
+Thread cur = Thread.currentThread();
+cur.getName();              // thread name
+cur.getId();                // unique thread ID
+cur.getPriority();          // 1-10 (5=NORM)
+cur.isAlive();              // still running?
+cur.isDaemon();             // background thread?
+cur.isVirtual();            // Java 21: virtual thread?
+cur.isInterrupted();        // check interrupt flag
+Thread.interrupted();       // check AND clear interrupt flag
+
+Thread.sleep(1000);         // pause (TIMED_WAITING), releases CPU
+Thread.yield();             // hint to scheduler, no guarantee
+
+// Interrupt a sleeping thread:
+Thread sleeper = new Thread(() -> {
+    try { Thread.sleep(60_000); }
+    catch (InterruptedException e) {
+        System.out.println("Interrupted! Clean up...");
+        Thread.currentThread().interrupt(); // re-set flag
+    }
+});
+sleeper.start();
+sleeper.interrupt();   // sets interrupt flag → causes InterruptedException</code></pre></div>
+  </div>
+  <div class="editor-footer">
+    <div class="footer-item"><div class="dot-status"></div>Java 17+</div>
+    <div class="footer-item">UTF-8</div>
+    <div class="footer-item">Thread Lifecycle</div>
+  </div>
+</div>
+</div>
+
+<!-- S3 -->
+<div class="section" id="s3" data-keywords="volatile visibility memory cpu cache atomic">
+<div class="section-header">
+<div class="section-num">3</div>
+<div class="section-info"><h2>Volatile &amp; Visibility</h2><p>volatile guarantees visibility (main memory flush) and prevents instruction reordering. Does NOT guarantee atomicity.</p>
+<div class="tags"><span class="tag tag-purple">volatile</span><span class="tag tag-teal">JMM</span><span class="tag tag-pink">Visibility</span></div></div></div>
+<div class="theory">
+  <h3>⚡ Core Theory — Volatile &amp; Java Memory Model (JMM)</h3>
+  <ul>
+    <li><strong>The Problem (CPU Caching):</strong> Modern CPUs have L1/L2/L3 caches. Each core may keep a local copy of a variable. Without synchronization, Thread A's write may NEVER be seen by Thread B — even if it executes "after" the write.</li>
+    <li><strong>volatile guarantees:</strong> Every write is flushed to main memory immediately. Every read fetches from main memory. This prevents stale cache reads.</li>
+    <li><strong>Happens-Before:</strong> A write to a volatile field <em>happens-before</em> every subsequent read of that field. This is the JMM's formal guarantee — not just a runtime behavior.</li>
+    <li><strong>Instruction Reordering:</strong> JVM/JIT and CPUs reorder instructions for optimization. <code>volatile</code> acts as a memory barrier, preventing reordering around it.</li>
+    <li><strong>volatile does NOT give atomicity:</strong> <code>count++</code> is 3 operations: read → increment → write. Another thread can interleave between any step. Use <code>AtomicInteger</code> or <code>synchronized</code> for compound ops.</li>
+    <li><strong>When to use volatile:</strong> Simple flag written by one thread, read by many (stop flags). Double-checked locking singleton. Status/state variables with single writer.</li>
+    <li><strong>Double-Checked Locking:</strong> Without <code>volatile</code> on the instance field, the JVM may see a partially constructed object due to reordering of the constructor call and the reference assignment.</li>
+  </ul>
+  <div class="tip">💡 Interview: "volatile prevents visibility bugs and reordering, but NOT race conditions on read-modify-write. Use AtomicInteger for counters."</div>
+</div>
+<div class="editor">
+  <div class="editor-header">
+    <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>VolatileExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+  </div>
+  <div class="editor-body">
+    <div class="line-numbers" id="ln-s3"></div>
+    <div class="code-content"><pre><code class="language-java">// WITHOUT volatile: JVM may cache 'running' in CPU register.
+// Reader thread might loop FOREVER even after running = false!
+// WITH volatile: every read goes to main memory — always sees latest value.
+private static volatile boolean running = true;
+
+public static void main(String[] args) throws InterruptedException {
+    Thread reader = new Thread(() -> {
+        while (running) { /* busy spin */ }
+        System.out.println("Stopped!");
+    });
+    reader.start();
+    Thread.sleep(1000);
+    running = false;   // Immediately visible to reader thread ✓
+    reader.join();
+}
+
+// ─── volatile GUARANTEES ────────────────────────────────────
+// ✓ Visibility: writes flushed to main memory immediately
+// ✓ Ordering:  happens-before guarantee (prevents reordering)
+// ✗ Atomicity: count++ is STILL a race condition!
+
+// ─── Use AtomicInteger for compound (read-modify-write) ops ─
+AtomicInteger count = new AtomicInteger(0);
+count.incrementAndGet();          // atomic: safe without locks
+count.compareAndSet(5, 10);       // CAS: if curr==5, set 10
+count.getAndUpdate(x -&gt; x * 2);  // atomic compute
+
+// ─── Double-Checked Locking (needs volatile!) ────────────────
+private static volatile Singleton instance;
+
+public static Singleton getInstance() {
+    if (instance == null) {            // first check (no lock)
+        synchronized (Singleton.class) {
+            if (instance == null) {    // second check (with lock)
+                instance = new Singleton();
+            }
+        }
+    }
+    return instance;
+}</code></pre></div>
+  </div>
+  <div class="editor-footer">
+    <div class="footer-item"><div class="dot-status"></div>Java 17+</div>
+    <div class="footer-item">UTF-8</div>
+    <div class="footer-item">Memory Model</div>
+  </div>
+</div>
+</div>
+
+<!-- S4 -->
+<div class="section" id="s4" data-keywords="synchronized monitor lock intrinsic wait notify notifyall">
+<div class="section-header">
+<div class="section-num">4</div>
+<div class="section-info"><h2>Synchronized</h2><p>Intrinsic locking — synchronized method, block on this, static method, private lock object. wait()/notify()/notifyAll()</p>
+<div class="tags"><span class="tag tag-purple">synchronized</span><span class="tag tag-teal">wait/notify</span><span class="tag tag-pink">Monitor</span></div></div></div>
+<div class="theory">
+  <h3>🔒 Core Theory — Synchronized &amp; Monitor Lock</h3>
+  <ul>
+    <li><strong>Monitor (Intrinsic Lock):</strong> Every Java object has a built-in monitor. Only one thread can hold it at a time. <code>synchronized</code> acquires this monitor on entry, releases on exit (even on exception).</li>
+    <li><strong>synchronized method vs block:</strong> Method-level locks on <code>this</code> (or <code>Class</code> for static). Block-level lets you lock on any object and narrow the critical section for better throughput.</li>
+    <li><strong>Static synchronized:</strong> Locks on the <code>Class</code> object — shared across all instances. Instance and static locks are INDEPENDENT.</li>
+    <li><strong>Private lock object (best practice):</strong> Prevents external code from accidentally locking on <code>this</code> and causing deadlocks. Gives you full control over who can synchronize on the lock.</li>
+    <li><strong>Reentrancy:</strong> Java monitors are reentrant — a thread that already holds a lock CAN re-acquire it without deadlocking. Hold count increments per re-entry.</li>
+    <li><strong>wait() / notify() / notifyAll():</strong> Must be called inside a <code>synchronized</code> block on the same object. <code>wait()</code> atomically releases the lock and suspends. <code>notify()</code> wakes one random waiter. <code>notifyAll()</code> wakes all — always use <code>while</code> loop to re-check condition.</li>
+    <li><strong>Guaranteed:</strong> Atomicity (only one thread in critical section) + Visibility (all writes before lock release are visible to next lock acquirer).</li>
+  </ul>
+  <div class="tip">💡 Interview: "synchronized guarantees mutual exclusion AND visibility. Always use a private lock object. Always use while(!condition) with wait()."</div>
+</div>
+<div class="editor">
+  <div class="editor-header">
+    <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>SynchronizationExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div>
+  </div>
+  <div class="editor-body">
+    <div class="line-numbers" id="ln-s4"></div>
+    <div class="code-content"><pre><code class="language-java">// 1. Synchronized instance method — lock = 'this'
+public synchronized void increment() { count++; }
+
+// 2. Synchronized static method — lock = Class object
+public static synchronized void staticMethod() { /* ... */ }
+
+// 3. Synchronized block on 'this' — fine-grained
+public void method() {
+    // non-critical work here (no lock)
+    synchronized (this) {
+        count++;  // only critical section locked
+    }
+}
+
+// 4. Private lock object — BEST PRACTICE
+// Prevents external code from accidentally locking on 'this'
+private final Object lock = new Object();
+public void safeMethod() {
+    synchronized (lock) { count++; }
+}
+
+// 5. Two independent locks for independent resources
+private final Object lockA = new Object();
+private final Object lockB = new Object();
+public void opA() { synchronized (lockA) { /* ... */ } }
+public void opB() { synchronized (lockB) { /* ... */ } }
+
+// 6. wait() / notifyAll() — MUST be inside synchronized block!
+synchronized (sharedObj) {
+    // ALWAYS use while (not if) to guard against spurious wakeups
+    while (!condition) {
+        sharedObj.wait();       // releases lock and waits
+    }
+    // do work
+    sharedObj.notifyAll();      // wake ALL waiting threads (safer than notify())
+}
+
+// 7. Reentrancy — same thread can re-acquire its own lock
+public synchronized void outer() {
+    inner(); // OK! Java locks are reentrant
+}
+public synchronized void inner() { /* same lock, no deadlock */ }</code></pre></div>
+  </div>
+  <div class="editor-footer">
+    <div class="footer-item"><div class="dot-status"></div>Java 17+</div>
+    <div class="footer-item">UTF-8</div>
+    <div class="footer-item">Intrinsic Lock</div>
+  </div>
+</div>
+</div>
+<!-- S5 -->
+<div class="section" id="s5" data-keywords="reentrantlock trylock timeout interruptible fairness queue">
+<div class="section-header"><div class="section-num">5</div>
+<div class="section-info"><h2>ReentrantLock</h2><p>Explicit locking with tryLock, timeout, interruptible acquisition, fairness, queue inspection</p>
+<div class="tags"><span class="tag tag-purple">ReentrantLock</span><span class="tag tag-teal">tryLock</span><span class="tag tag-pink">Fairness</span></div></div></div>
+<div class="theory">
+  <h3>🔑 Core Theory — ReentrantLock vs synchronized</h3>
+  <div class="theory-grid">
+    <div class="theory-col"><h4>Why ReentrantLock?</h4>
+      <ul>
+        <li><strong>tryLock():</strong> Non-blocking — returns <code>false</code> immediately if lock unavailable. Prevents deadlocks.</li>
+        <li><strong>tryLock(timeout):</strong> Wait up to N time units, then give up. Avoids indefinite blocking.</li>
+        <li><strong>lockInterruptibly():</strong> Thread can be interrupted while waiting for the lock — not possible with <code>synchronized</code>.</li>
+        <li><strong>Fairness:</strong> <code>new ReentrantLock(true)</code> → longest-waiting thread gets lock. Prevents starvation but reduces throughput.</li>
+        <li><strong>Multiple Conditions:</strong> <code>lock.newCondition()</code> creates separate wait-sets — much more precise than <code>notifyAll()</code>.</li>
+        <li><strong>Queue inspection:</strong> <code>getQueueLength()</code>, <code>hasQueuedThreads()</code> — useful for monitoring/debugging.</li>
+      </ul>
+    </div>
+    <div class="theory-col"><h4>synchronized vs ReentrantLock</h4>
+      <ul>
+        <li><strong>synchronized:</strong> Simpler syntax, auto-release, no timeout, not interruptible, unfair</li>
+        <li><strong>ReentrantLock:</strong> Manual <code>unlock()</code> in finally required, supports timeout, interruptible, optional fairness, multiple conditions</li>
+        <li><strong>Performance:</strong> In Java 6+, both have similar throughput. ReentrantLock wins under high contention with fair mode or when tryLock is needed.</li>
+        <li><strong>Critical rule:</strong> ALWAYS unlock in a <code>finally</code> block or you risk permanently locking out all threads!</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tip">💡 Interview: "Use ReentrantLock when you need tryLock, timeout, interruptible waiting, fairness, or multiple Condition objects."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>ReentrantLockExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s5"></div>
+    <div class="code-content"><pre><code class="language-java">// fair=true → longest-waiting thread gets lock (less throughput, no starvation)
+// fair=false (default) → any thread may get it (higher throughput)
+ReentrantLock lock = new ReentrantLock(true);
+
+// ─── Basic lock/unlock — ALWAYS unlock in finally! ───────────
+lock.lock();
+try {
+    System.out.println("HoldCount: " + lock.getHoldCount());     // 1
+    System.out.println("isHeld:    " + lock.isHeldByCurrentThread()); // true
+    System.out.println("isLocked:  " + lock.isLocked());          // true
+    // Re-entrant: same thread can lock again
+    lock.lock();
+    System.out.println("HoldCount: " + lock.getHoldCount());     // 2
+    lock.unlock(); // inner unlock
+} finally {
+    lock.unlock(); // outer unlock — always in finally!
+}
+
+// ─── tryLock() — non-blocking, returns false immediately ─────
+if (lock.tryLock()) {
+    try { System.out.println("Got lock immediately!"); }
+    finally { lock.unlock(); }
+} else {
+    System.out.println("Lock not available — skipping");
+}
+
+// ─── tryLock(timeout) — wait up to N time ─────────────────────
+if (lock.tryLock(500, TimeUnit.MILLISECONDS)) {
+    try { /* got lock within 500ms */ }
+    finally { lock.unlock(); }
+}
+
+// ─── lockInterruptibly() — can abort while waiting ───────────
+try {
+    lock.lockInterruptibly();   // throws InterruptedException if interrupted
+    try { /* critical section */ }
+    finally { lock.unlock(); }
+} catch (InterruptedException e) {
+    System.out.println("Interrupted while waiting for lock!");
+}
+
+// ─── Queue inspection ─────────────────────────────────────────
+System.out.println("isFair:          " + lock.isFair());
+System.out.println("getQueueLength:  " + lock.getQueueLength());
+System.out.println("hasQueuedThreads:" + lock.hasQueuedThreads());
+System.out.println("hasQueuedThread: " + lock.hasQueuedThread(someThread));</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 17+</div><div class="footer-item">UTF-8</div><div class="footer-item">java.util.concurrent.locks</div></div>
+</div></div>
+
+<!-- S6 -->
+<div class="section" id="s6" data-keywords="readwritelock stampedlock optimistic read write shared exclusive">
+<div class="section-header"><div class="section-num">6</div>
+<div class="section-info"><h2>ReadWriteLock &amp; StampedLock</h2><p>ReadWriteLock: concurrent reads OR exclusive write. StampedLock: adds optimistic reads for maximum read throughput.</p>
+<div class="tags"><span class="tag tag-purple">ReadWriteLock</span><span class="tag tag-teal">StampedLock</span><span class="tag tag-pink">Optimistic</span></div></div></div>
+<div class="theory">
+  <h3>📖 Core Theory — ReadWriteLock &amp; StampedLock</h3>
+  <div class="theory-grid">
+    <div class="theory-col"><h4>ReentrantReadWriteLock</h4>
+      <ul>
+        <li><strong>Read lock (shared):</strong> Multiple threads can hold simultaneously. Ideal for read-heavy workloads (caches, config).</li>
+        <li><strong>Write lock (exclusive):</strong> Only one thread at a time. Blocks ALL readers AND other writers.</li>
+        <li><strong>Lock downgrade:</strong> You can downgrade write→read (acquire read while holding write, then release write). Upgrade (read→write) is NOT supported — causes deadlock.</li>
+        <li><strong>Writer starvation risk:</strong> In read-heavy systems, writers may starve. Use <code>fair=true</code> or StampedLock to address.</li>
+      </ul>
+    </div>
+    <div class="theory-col"><h4>StampedLock (Java 8+)</h4>
+      <ul>
+        <li><strong>Optimistic read:</strong> <code>tryOptimisticRead()</code> returns a stamp WITHOUT acquiring any lock. Then validate with <code>validate(stamp)</code>. If a write happened, fall back to a real read lock. Fastest for mostly-read scenarios.</li>
+        <li><strong>Not reentrant:</strong> Unlike ReentrantReadWriteLock, StampedLock is NOT reentrant. Do NOT call it recursively — deadlock!</li>
+        <li><strong>Stamp-based API:</strong> All lock/unlock methods use a long stamp token. Lose the stamp → can't unlock!</li>
+        <li><strong>Lock views:</strong> <code>asReadLock()</code>, <code>asWriteLock()</code> provide Lock-compatible views for interop.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tip">💡 Interview: "StampedLock's optimistic read is the fastest — zero blocking, just validate afterwards. Use when reads vastly outnumber writes."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>ReadWriteStampedLock.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s6"></div>
+    <div class="code-content"><pre><code class="language-java">// ─── ReentrantReadWriteLock ──────────────────────────────────
+// Many threads can hold readLock simultaneously (no blocking between readers)
+// writeLock is exclusive — blocks ALL readers AND writers
+ReadWriteLock rwLock = new ReentrantReadWriteLock(true); // fair
+
+public String read() {
+    rwLock.readLock().lock();
+    try {
+        return data;    // concurrent reads allowed!
+    } finally { rwLock.readLock().unlock(); }
+}
+
+public void write(String val) {
+    rwLock.writeLock().lock();
+    try {
+        data = val;     // exclusive — no other reader or writer
+    } finally { rwLock.writeLock().unlock(); }
+}
+
+// Inspection:
+rwLock.getReadLockCount();              // number of read locks held
+rwLock.isWriteLocked();                 // is write lock held?
+rwLock.getWriteHoldCount();             // write lock hold count
+
+// ─── StampedLock (Java 8+) ────────────────────────────────────
+// Best feature: OPTIMISTIC READ — no lock acquired, just validate afterwards
+StampedLock sl = new StampedLock();
+double[] point = {3.0, 4.0};
+
+public double distanceFromOrigin() {
+    long stamp = sl.tryOptimisticRead();    // returns stamp, NO lock held
+    double x = point[0], y = point[1];     // read without lock!
+    if (!sl.validate(stamp)) {              // did a write happen?
+        stamp = sl.readLock();              // fall back to real read lock
+        try { x = point[0]; y = point[1]; }
+        finally { sl.unlockRead(stamp); }
+    }
+    return Math.sqrt(x * x + y * y);
+}
+
+// Lock conversions:
+long ws = sl.tryConvertToWriteLock(stamp);    // upgrade read → write
+long rs = sl.tryConvertToReadLock(stamp);     // downgrade write → read
+long os = sl.tryConvertToOptimisticRead(stamp);// release read, get optimistic
+
+// Lock views (for API compatibility):
+Lock readView  = sl.asReadLock();
+Lock writeView = sl.asWriteLock();
+ReadWriteLock rwView = sl.asReadWriteLock();</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 8+</div><div class="footer-item">UTF-8</div><div class="footer-item">Read-Write Pattern</div></div>
+</div></div>
+
+<!-- S7 -->
+<div class="section" id="s7" data-keywords="condition await signal newcondition producer consumer wait">
+<div class="section-header"><div class="section-num">7</div>
+<div class="section-info"><h2>Condition Variables</h2><p>Fine-grained signaling with ReentrantLock.newCondition() — separate conditions for producers and consumers</p>
+<div class="tags"><span class="tag tag-purple">Condition</span><span class="tag tag-teal">await()</span><span class="tag tag-pink">signal()</span></div></div></div>
+<div class="theory">
+  <h3>🔔 Core Theory — Condition Variables</h3>
+  <ul>
+    <li><strong>What is a Condition?</strong> A <code>Condition</code> is created from a <code>ReentrantLock</code> via <code>lock.newCondition()</code>. It is analogous to <code>wait()/notify()</code> but tied to an explicit lock, not an object monitor.</li>
+    <li><strong>Multiple conditions (key advantage):</strong> With <code>synchronized + notifyAll()</code>, you wake ALL waiters and they all re-check — wasteful. With two Condition objects (<code>notFull</code>, <code>notEmpty</code>), producers only wake consumers and vice versa. Precise and efficient.</li>
+    <li><strong>await():</strong> Atomically releases the lock and suspends. Re-acquires the lock before returning. ALWAYS use inside a <code>while</code> loop (spurious wakeups!)</li>
+    <li><strong>signal() vs signalAll():</strong> <code>signal()</code> wakes ONE waiter on that specific Condition. <code>signalAll()</code> wakes ALL on that Condition. With single-consumer Conditions, <code>signal()</code> is safe and efficient.</li>
+    <li><strong>awaitUninterruptibly():</strong> Ignores interrupts while waiting — use when you must not abandon the wait.</li>
+    <li><strong>Timed await:</strong> <code>await(time, unit)</code> and <code>awaitNanos(ns)</code> prevent deadlock by adding a timeout safety net.</li>
+  </ul>
+  <div class="tip">💡 Interview: "Condition variables are the explicit-lock equivalent of wait/notify, but you can have MULTIPLE conditions per lock — producers and consumers each wait on their own queue."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>ConditionExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s7"></div>
+    <div class="code-content"><pre><code class="language-java">ReentrantLock lock = new ReentrantLock();
+// Two SEPARATE conditions — much more precise than notifyAll()
+Condition notFull  = lock.newCondition(); // "buffer has space"
+Condition notEmpty = lock.newCondition(); // "buffer has items"
+
+// ─── Producer ────────────────────────────────────────────────
+public void produce(int item) throws InterruptedException {
+    lock.lock();
+    try {
+        while (queue.size() == CAPACITY)
+            notFull.await();       // wait ONLY on notFull (not all waiters!)
+        queue.add(item);
+        notEmpty.signal();         // wake exactly ONE consumer
+    } finally { lock.unlock(); }
+}
+
+// ─── Consumer ────────────────────────────────────────────────
+public int consume() throws InterruptedException {
+    lock.lock();
+    try {
+        while (queue.isEmpty())
+            notEmpty.await();      // wait ONLY on notEmpty
+        int item = queue.poll();
+        notFull.signal();          // wake exactly ONE producer
+        return item;
+    } finally { lock.unlock(); }
+}
+
+// ─── All Condition methods ───────────────────────────────────
+notFull.await();                        // wait (releases lock)
+notFull.awaitNanos(300_000_000L);       // timed wait (nanoseconds)
+notFull.await(300, TimeUnit.MILLISECONDS); // timed wait
+notFull.awaitUntil(deadline);           // wait until absolute date
+notFull.awaitUninterruptibly();         // ignores Thread.interrupt()!
+notFull.signal();                       // wake one waiter
+notFull.signalAll();                    // wake all waiters
+
+// Queue inspection:
+lock.getWaitQueueLength(notFull);       // count of waiters on this condition
+lock.hasWaiters(notFull);              // any thread waiting on it?</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 17+</div><div class="footer-item">UTF-8</div><div class="footer-item">Condition API</div></div>
+</div></div>
+<!-- S8 -->
+<div class="section" id="s8" data-keywords="countdownlatch await countdown getcount">
+<div class="section-header"><div class="section-num">8</div>
+<div class="section-info"><h2>CountDownLatch</h2><p>One-shot synchronizer: main thread waits for N worker threads to complete. Non-reusable.</p>
+<div class="tags"><span class="tag tag-purple">CountDownLatch</span><span class="tag tag-teal">await()</span><span class="tag tag-pink">countDown()</span></div></div></div>
+<div class="theory">
+  <h3>⏳ Core Theory — CountDownLatch</h3>
+  <ul>
+    <li><strong>What it does:</strong> Initialized with count N. Worker threads call <code>countDown()</code> to decrement. Main thread calls <code>await()</code> and blocks until count reaches zero. Like a race starter waiting for all runners to check in.</li>
+    <li><strong>One-shot (non-reusable):</strong> Once count reaches zero, it stays zero. All subsequent <code>await()</code> calls return immediately. Cannot be reset — for reusable barriers, use <code>CyclicBarrier</code>.</li>
+    <li><strong>Any thread can countDown:</strong> Unlike locks, there is no ownership. Any thread (even threads not in the latch) can call <code>countDown()</code>. The count never goes below zero.</li>
+    <li><strong>await() with timeout:</strong> Returns <code>true</code> if count reached zero in time, <code>false</code> if timed out. Use this in production to avoid indefinite blocking.</li>
+    <li><strong>Common patterns:</strong> (1) Service startup — wait for N services to initialize before accepting requests. (2) Test synchronization — start all threads simultaneously. (3) Parallel computation — wait for all workers to finish before aggregating.</li>
+    <li><strong>getCount():</strong> Returns current count (long). Useful for diagnostics.</li>
+  </ul>
+  <div class="tip">💡 Interview: "CountDownLatch = one-shot. CyclicBarrier = reusable. CountDownLatch: one thread waits for N. CyclicBarrier: all N wait for each other."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>CountDownLatchExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s8"></div>
+    <div class="code-content"><pre><code class="language-java">CountDownLatch latch = new CountDownLatch(3); // count = 3
+System.out.println("Initial count: " + latch.getCount()); // 3
+
+// Start 3 service threads
+for (int i = 0; i &lt; 3; i++) {
+    final int id = i;
+    new Thread(() -> {
+        try {
+            System.out.println("Service-" + id + " initializing...");
+            Thread.sleep((long)(Math.random() * 2000));
+            System.out.println("Service-" + id + " is UP!");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            latch.countDown(); // decrement count by 1
+            System.out.println("Remaining: " + latch.getCount());
+        }
+    }).start();
+}
+
+// Main thread blocks until count reaches 0
+latch.await();
+System.out.println("All services ready! Starting application...");
+
+// ─── await with timeout ───────────────────────────────────────
+CountDownLatch timedLatch = new CountDownLatch(5);
+boolean reachedZero = timedLatch.await(2, TimeUnit.SECONDS);
+System.out.println("Reached zero: " + reachedZero); // false (only ~2s passed)
+System.out.println("Count left:   " + timedLatch.getCount()); // 5
+
+// ─── CountDownLatch API summary ───────────────────────────────
+// countDown()              — decrement count (can be called by any thread)
+// await()                  — block until count == 0
+// await(timeout, unit)     — block with timeout, returns boolean
+// getCount()               — current count (long)
+// ⚠️ Cannot be reset! Use CyclicBarrier for reusable barriers.</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 5+</div><div class="footer-item">UTF-8</div><div class="footer-item">One-shot Barrier</div></div>
+</div></div>
+
+<!-- S9 -->
+<div class="section" id="s9" data-keywords="cyclicbarrier await reset parties barrier action reuse">
+<div class="section-header"><div class="section-num">9</div>
+<div class="section-info"><h2>CyclicBarrier</h2><p>Reusable barrier: all N threads wait for each other, then proceed together. Optional barrier action runs when all arrive.</p>
+<div class="tags"><span class="tag tag-purple">CyclicBarrier</span><span class="tag tag-teal">Reusable</span><span class="tag tag-pink">Barrier Action</span></div></div></div>
+<div class="theory">
+  <h3>🚧 Core Theory — CyclicBarrier</h3>
+  <ul>
+    <li><strong>What it does:</strong> All N parties call <code>await()</code>. The last to arrive triggers the optional barrier action (runs in that thread), then ALL are released simultaneously. Like a race where all runners must be at the start line before the gun fires.</li>
+    <li><strong>Reusable (cyclic):</strong> After all parties are released, the barrier automatically resets for the next phase. This is the key difference from CountDownLatch.</li>
+    <li><strong>Barrier action:</strong> Optional <code>Runnable</code> passed to the constructor. Runs exactly once per phase, in the last-arriving thread, BEFORE any thread proceeds. Perfect for aggregating phase results.</li>
+    <li><strong>BrokenBarrierException:</strong> Thrown when a thread is interrupted while waiting, or when <code>reset()</code> is called while threads are waiting. Once broken, all waiting threads get this exception.</li>
+    <li><strong>await() return value:</strong> Returns the arrival index (0 = last to arrive). You can use this to identify the "leader" thread per phase.</li>
+    <li><strong>Use case:</strong> Parallel algorithms with phases (matrix multiplication, parallel sorting, multi-player game rounds where all players must finish a round before the next starts).</li>
+  </ul>
+  <div class="tip">💡 Interview: "CyclicBarrier is reusable — use it for multi-round parallel algorithms. CountDownLatch is one-shot — use it for one-time initialization."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>CyclicBarrierExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s9"></div>
+    <div class="code-content"><pre><code class="language-java">// Barrier action runs ONCE when all parties arrive (in last-arriving thread)
+CyclicBarrier barrier = new CyclicBarrier(3, () -&gt;
+    System.out.println("All arrived! Aggregating results...")
+);
+
+System.out.println("getParties(): " + barrier.getParties()); // 3
+
+// CyclicBarrier IS reusable — workers can go through multiple rounds!
+for (int round = 0; round &lt; 2; round++) {
+    for (int i = 0; i &lt; 3; i++) {
+        final int id = i;
+        new Thread(() -&gt; {
+            try {
+                System.out.println("Worker-" + id + " working...");
+                Thread.sleep((long)(Math.random() * 500));
+
+                // All 3 threads must call await() before any proceeds
+                int arrivalPhase = barrier.await();
+                System.out.println("Worker-" + id + " released from phase: " + arrivalPhase);
+            } catch (InterruptedException | BrokenBarrierException e) {
+                System.out.println("Barrier broken or interrupted!");
+            }
+        }).start();
+    }
+    Thread.sleep(1500); // wait for round to finish
+}
+
+// ─── await with timeout ───────────────────────────────────────
+try {
+    barrier.await(100, TimeUnit.MILLISECONDS); // TimeoutException if not all arrive
+} catch (TimeoutException e) {
+    System.out.println("Timeout! Barrier is now broken.");
+}
+
+// ─── CyclicBarrier API ─────────────────────────────────────────
+barrier.getParties();        // total parties
+barrier.getNumberWaiting();  // currently waiting count
+barrier.isBroken();          // true if barrier disrupted
+barrier.reset();             // reset to initial state (breaks waiting threads!)</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 5+</div><div class="footer-item">UTF-8</div><div class="footer-item">Reusable Barrier</div></div>
+</div></div>
+
+<!-- S10 -->
+<div class="section" id="s10" data-keywords="semaphore acquire release permits tryacquire drain connection pool">
+<div class="section-header"><div class="section-num">10</div>
+<div class="section-info"><h2>Semaphore</h2><p>Controls access to N concurrent slots — connection pools, rate limiting. Any thread can release (unlike locks).</p>
+<div class="tags"><span class="tag tag-purple">Semaphore</span><span class="tag tag-teal">acquire()</span><span class="tag tag-pink">Permits</span></div></div></div>
+<div class="theory">
+  <h3>🚦 Core Theory — Semaphore</h3>
+  <ul>
+    <li><strong>What it is:</strong> A counting semaphore with N permits. <code>acquire()</code> decrements (blocks if 0). <code>release()</code> increments (unblocks a waiter). Conceptually: a bucket of N tokens.</li>
+    <li><strong>Not a lock (no ownership):</strong> Any thread can call <code>release()</code>, even one that never called <code>acquire()</code>. This makes it suitable for producer-consumer handoff and can even allow permits to go ABOVE the initial count!</li>
+    <li><strong>Mutex with Semaphore(1):</strong> A binary semaphore (<code>new Semaphore(1)</code>) acts like a mutex, but since there's no ownership, it can be released by a different thread — useful for inter-thread signaling.</li>
+    <li><strong>Connection pool pattern:</strong> Initialize with N = max connections. Each thread acquires before using a connection, releases after. Automatically throttles concurrent DB access.</li>
+    <li><strong>Rate limiting:</strong> Use with <code>tryAcquire()</code> to implement rate limiting — reject requests when all permits are taken.</li>
+    <li><strong>drainPermits():</strong> Acquires all available permits atomically. Useful for maintenance/shutdown scenarios.</li>
+    <li><strong>Fairness:</strong> <code>new Semaphore(n, true)</code> ensures FIFO ordering — longest-waiting thread gets next permit. Default is unfair (higher throughput).</li>
+  </ul>
+  <div class="tip">💡 Interview: "Semaphore controls CONCURRENCY (how many threads can run). Lock controls EXCLUSIVITY (only one thread). Semaphore(1) ≈ mutex but without ownership."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>SemaphoreExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s10"></div>
+    <div class="code-content"><pre><code class="language-java">// Allow max 3 concurrent DB connections (like a connection pool)
+Semaphore semaphore = new Semaphore(3, true); // 3 permits, fair=true
+
+System.out.println("availablePermits: " + semaphore.availablePermits()); // 3
+System.out.println("isFair:           " + semaphore.isFair());           // true
+
+// ─── Basic acquire/release ────────────────────────────────────
+try {
+    semaphore.acquire();      // blocks if 0 permits; throws InterruptedException
+    System.out.println("Connected! Available: " + semaphore.availablePermits());
+    // ... use resource ...
+} finally {
+    semaphore.release();      // ALWAYS release in finally! (any thread can release)
+}
+
+// ─── Acquire/release multiple permits ────────────────────────
+semaphore.acquire(2);         // acquire 2 at once
+semaphore.release(2);         // release 2 at once
+
+// ─── Non-blocking / timed variants ───────────────────────────
+boolean got = semaphore.tryAcquire();                        // immediate, no wait
+boolean timedGot = semaphore.tryAcquire(500, TimeUnit.MILLISECONDS); // timed
+boolean nGot = semaphore.tryAcquire(2, 100, TimeUnit.MILLISECONDS);  // n + timed
+
+// ─── Drain all permits ────────────────────────────────────────
+int drained = semaphore.drainPermits(); // acquires ALL available permits at once
+
+// ─── Queue inspection ─────────────────────────────────────────
+semaphore.getQueueLength();    // threads currently waiting
+semaphore.hasQueuedThreads();  // any threads waiting?
+semaphore.availablePermits();  // current permit count
+
+// ─── 10 clients competing for 3 slots ────────────────────────
+for (int i = 0; i &lt; 10; i++) {
+    final int clientId = i;
+    new Thread(() -&gt; {
+        try {
+            semaphore.acquire();
+            System.out.println("Client-" + clientId + " connected");
+            Thread.sleep((long)(Math.random() * 500));
+        } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        finally { semaphore.release(); }
+    }).start();
+}</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 5+</div><div class="footer-item">UTF-8</div><div class="footer-item">Resource Pool</div></div>
+</div></div>
+
+<!-- S11 -->
+<div class="section" id="s11" data-keywords="phaser arrive register deregister phase dynamic parties">
+<div class="section-header"><div class="section-num">11</div>
+<div class="section-info"><h2>Phaser</h2><p>Dynamic multi-phase barrier — threads can join/leave between phases. More flexible than CyclicBarrier.</p>
+<div class="tags"><span class="tag tag-purple">Phaser</span><span class="tag tag-teal">Multi-Phase</span><span class="tag tag-pink">Dynamic</span></div></div></div>
+<div class="theory">
+  <h3>📋 Core Theory — Phaser</h3>
+  <ul>
+    <li><strong>What it is:</strong> A generalized, reusable synchronization barrier that supports dynamic registration of parties and multiple phases. Think CyclicBarrier + dynamic parties + phase tracking.</li>
+    <li><strong>Dynamic parties:</strong> Threads can <code>register()</code> or <code>arriveAndDeregister()</code> at any time. This is impossible with CyclicBarrier (fixed party count at construction).</li>
+    <li><strong>arriveAndAwaitAdvance():</strong> Arrive at current phase AND wait for all to arrive before advancing. Equivalent to CyclicBarrier.await() but with a phase number.</li>
+    <li><strong>arrive():</strong> Non-blocking arrival — marks arrival but does NOT wait. Useful when a thread wants to "check in" without blocking.</li>
+    <li><strong>Phase number:</strong> Starts at 0, increments each time all parties arrive. <code>getPhase()</code> returns current phase. Returns negative when terminated.</li>
+    <li><strong>Termination:</strong> Override <code>onAdvance(phase, registeredParties)</code> to define termination condition (e.g., after 5 phases). Return <code>true</code> from it to terminate the phaser.</li>
+    <li><strong>Tiered phasers:</strong> Phasers can be organized in a tree hierarchy (parent-child) to manage thousands of parties efficiently without contention.</li>
+  </ul>
+  <div class="tip">💡 Interview: "Phaser = CyclicBarrier + dynamic participants + multiple phases. Use when the number of threads changes across rounds or you need phase-based lifecycle control."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>PhaserExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s11"></div>
+    <div class="code-content"><pre><code class="language-java">Phaser phaser = new Phaser(1); // register main thread (parties=1)
+System.out.println("Phase: " + phaser.getPhase());              // 0
+System.out.println("Registered: " + phaser.getRegisteredParties()); // 1
+
+for (int i = 0; i &lt; 3; i++) {
+    phaser.register(); // dynamically register each worker
+    final int id = i;
+    new Thread(() -&gt; {
+        // ─── Phase 0 ───────────────────────────────────────
+        System.out.println("Worker-" + id + " Phase 0 work...");
+        Thread.sleep((long)(Math.random() * 300));
+        phaser.arriveAndAwaitAdvance(); // arrive + wait for all → moves to phase 1
+
+        // ─── Phase 1 ───────────────────────────────────────
+        System.out.println("Worker-" + id + " Phase 1 work...");
+        phaser.arriveAndDeregister();   // arrive + LEAVE the phaser
+        System.out.println("Worker-" + id + " deregistered. Parties=" + phaser.getRegisteredParties());
+    }).start();
+}
+
+phaser.arriveAndAwaitAdvance(); // main participates in phase 0
+System.out.println("Phase advanced to: " + phaser.getPhase()); // 1
+phaser.arriveAndDeregister();   // main deregisters
+
+// ─── All Phaser methods ─────────────────────────────────────
+phaser.arrive();                // non-blocking arrival (no waiting)
+phaser.awaitAdvance(phase);     // wait for a specific phase to complete
+phaser.register();              // add one party dynamically
+phaser.bulkRegister(n);         // add n parties at once
+phaser.getPhase();              // current phase number
+phaser.getRegisteredParties();  // total registered
+phaser.getArrivedParties();     // arrived in current phase
+phaser.getUnarrivedParties();   // yet to arrive
+phaser.isTerminated();          // is phaser done?
+phaser.forceTermination();      // terminate (all awaits return negative phase)
+
+// ─── Phaser tree (for massive parallelism) ─────────────────
+Phaser parent = new Phaser(0);
+Phaser child1 = new Phaser(parent, 4); // child with 4 parties, under parent</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 7+</div><div class="footer-item">UTF-8</div><div class="footer-item">Multi-Phase Sync</div></div>
+</div></div>
+
+<!-- S12 -->
+<div class="section" id="s12" data-keywords="exchanger exchange timeout handoff swap two threads">
+<div class="section-header"><div class="section-num">12</div>
+<div class="section-info"><h2>Exchanger</h2><p>Synchronization point where exactly two threads swap objects. Blocks until the partner arrives.</p>
+<div class="tags"><span class="tag tag-purple">Exchanger</span><span class="tag tag-teal">exchange()</span><span class="tag tag-pink">Two-Thread</span></div></div></div>
+<div class="theory">
+  <h3>🔄 Core Theory — Exchanger</h3>
+  <ul>
+    <li><strong>What it is:</strong> A synchronization point for EXACTLY TWO threads to swap data. Each thread presents an object and receives the other's object. Both block until both have arrived.</li>
+    <li><strong>Rendezvous point:</strong> Both threads must call <code>exchange()</code>. The first to arrive blocks; when the second arrives, both are unblocked simultaneously with each other's data.</li>
+    <li><strong>exchange() with timeout:</strong> Throws <code>TimeoutException</code> if the partner doesn't arrive within the given time. Critical for preventing deadlocks when the partner thread may have crashed.</li>
+    <li><strong>Double-buffering pattern:</strong> Thread A fills Buffer1 while Thread B drains Buffer2. When both finish, they swap via Exchanger. Thread A now drains Buffer1 (filled by B's previous round). Zero idle time, maximum throughput.</li>
+    <li><strong>Only two threads:</strong> If more than 2 threads use the same Exchanger, the pairing is arbitrary and non-deterministic. Design for exactly 2 partners.</li>
+    <li><strong>Use cases:</strong> Pipeline stages, producer-consumer with backpressure, genetic algorithm crossover, network packet I/O buffering.</li>
+  </ul>
+  <div class="tip">💡 Interview: "Exchanger is for 2-thread data swapping. Classic use: double-buffering where one thread fills while the other drains, then they swap buffers."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>ExchangerExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s12"></div>
+    <div class="code-content"><pre><code class="language-java">// Exactly TWO threads swap data at a synchronization point
+Exchanger&lt;String&gt; exchanger = new Exchanger&lt;&gt;();
+
+// Thread 1 - Producer
+new Thread(() -&gt; {
+    try {
+        String toSend = "Data from Producer";
+        System.out.println("P sending: " + toSend);
+        String received = exchanger.exchange(toSend); // blocks until T2 arrives
+        System.out.println("P received: " + received);
+    } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+}, "Producer").start();
+
+// Thread 2 - Consumer
+new Thread(() -&gt; {
+    try {
+        Thread.sleep(500); // simulate some delay
+        String toSend = "ACK from Consumer";
+        System.out.println("C sending: " + toSend);
+        String received = exchanger.exchange(toSend); // rendezvous!
+        System.out.println("C received: " + received);
+    } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+}, "Consumer").start();
+
+// ─── exchange with timeout ─────────────────────────────────
+// Throws TimeoutException if the other party doesn't arrive in time
+Exchanger&lt;Integer&gt; timedEx = new Exchanger&lt;&gt;();
+try {
+    Integer result = timedEx.exchange(42, 300, TimeUnit.MILLISECONDS);
+} catch (TimeoutException e) {
+    System.out.println("No partner arrived in 300ms!");
+} catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+
+// ─── Use case: Double-buffering ─────────────────────────────
+// Thread 1 fills a buffer while Thread 2 drains the other.
+// They swap buffers via exchanger when each finishes.
+// → Maximum throughput, no idle time on either side!</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 5+</div><div class="footer-item">UTF-8</div><div class="footer-item">Rendezvous Point</div></div>
+</div></div>
+<!-- S13 -->
+<div class="section" id="s13" data-keywords="executorservice executor thread pool fixed cached single shutdown invoke future">
+<div class="section-header"><div class="section-num">13</div>
+<div class="section-info"><h2>ExecutorService</h2><p>All thread pool types, submit, invokeAll, invokeAny, Future methods, and proper shutdown lifecycle.</p>
+<div class="tags"><span class="tag tag-purple">ExecutorService</span><span class="tag tag-teal">ThreadPool</span><span class="tag tag-pink">Future</span><span class="tag tag-yellow">invokeAll</span></div></div></div>
+<div class="theory">
+  <h3>⚙️ Core Theory — ExecutorService &amp; Thread Pools</h3>
+  <div class="theory-grid">
+    <div class="theory-col"><h4>Pool Types</h4>
+      <ul>
+        <li><strong>FixedThreadPool(n):</strong> n threads always alive. Bounded concurrency. Good for CPU-bound tasks. Queue is unbounded (risk: OOM if tasks pile up).</li>
+        <li><strong>CachedThreadPool:</strong> Grows unboundedly. Threads idle for 60s then die. Good for short-lived I/O tasks. Risk: thread explosion.</li>
+        <li><strong>SingleThreadExecutor:</strong> 1 thread, sequential execution, ordered FIFO. If thread dies, a new one replaces it.</li>
+        <li><strong>ScheduledThreadPool:</strong> For delayed and periodic tasks. Use instead of Timer (which stops on uncaught exception).</li>
+        <li><strong>WorkStealingPool:</strong> ForkJoinPool under the hood. Threads steal work from other threads' queues. Best for recursive/divide-and-conquer tasks.</li>
+      </ul>
+    </div>
+    <div class="theory-col"><h4>ThreadPoolExecutor params</h4>
+      <ul>
+        <li><strong>corePoolSize:</strong> Minimum threads always alive (even idle)</li>
+        <li><strong>maximumPoolSize:</strong> Max threads. Extra threads created only when queue is full.</li>
+        <li><strong>keepAliveTime:</strong> Idle non-core threads die after this duration.</li>
+        <li><strong>workQueue:</strong> Bounded = backpressure. Unbounded = OOM risk. SynchronousQueue = no buffering.</li>
+        <li><strong>RejectionPolicy:</strong> AbortPolicy (throw), CallerRunsPolicy (run in caller), DiscardPolicy (drop silently), DiscardOldestPolicy (drop oldest).</li>
+        <li><strong>Shutdown:</strong> <code>shutdown()</code> stops new tasks, drains queue. <code>shutdownNow()</code> interrupts running tasks, returns unstarted list.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tip">💡 Interview: "Never use newCachedThreadPool() in production for unbounded workloads. Always use bounded ThreadPoolExecutor with a rejection handler to prevent resource exhaustion."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>ExecutorServiceExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s13"></div>
+    <div class="code-content"><pre><code class="language-java">// ─── All Executor Types ──────────────────────────────────────
+Executors.newSingleThreadExecutor()          // 1 thread, sequential, unbounded queue
+Executors.newFixedThreadPool(4)              // 4 threads, unbounded LinkedBlockingQueue
+Executors.newCachedThreadPool()              // dynamic threads, 60s idle timeout, unbounded
+Executors.newScheduledThreadPool(2)          // for delayed/periodic tasks
+Executors.newWorkStealingPool()              // ForkJoinPool, parallelism = CPU cores
+Executors.newVirtualThreadPerTaskExecutor()  // Java 21: 1 virtual thread per task
+
+// ─── Custom ThreadPoolExecutor (all 7 parameters) ─────────────
+ExecutorService exec = new ThreadPoolExecutor(
+    2,                                    // corePoolSize: always-alive threads
+    4,                                    // maximumPoolSize: max threads when queue full
+    30L, TimeUnit.SECONDS,               // keepAliveTime: idle time before extra threads die
+    new ArrayBlockingQueue&lt;&gt;(10),        // workQueue: bounded queue
+    new MyThreadFactory("Pool"),         // threadFactory: custom thread creation
+    new ThreadPoolExecutor.CallerRunsPolicy() // rejection: run in caller's thread
+    // Other policies: AbortPolicy(default), DiscardPolicy, DiscardOldestPolicy
+);
+
+// ─── Submit tasks ─────────────────────────────────────────────
+exec.execute(() -&gt; System.out.println("Fire-and-forget Runnable"));
+
+Future&lt;Integer&gt; f = exec.submit(() -&gt; 42);  // Callable → returns Future
+f.get();                          // blocks until done (throws ExecutionException)
+f.get(1, TimeUnit.SECONDS);      // with timeout → throws TimeoutException
+f.isDone();                       // completed (success, cancel, or exception)?
+f.isCancelled();                  // was it cancelled?
+f.cancel(true);                   // true = interrupt if running
+
+// ─── invokeAll — submit ALL, wait for ALL ─────────────────────
+List&lt;Callable&lt;String&gt;&gt; tasks = List.of(task1, task2, task3);
+List&lt;Future&lt;String&gt;&gt; results = exec.invokeAll(tasks);
+List&lt;Future&lt;String&gt;&gt; timed   = exec.invokeAll(tasks, 2, TimeUnit.SECONDS);
+
+// ─── invokeAny — return FIRST successful result, cancel rest ──
+String fastest = exec.invokeAny(tasks);
+
+// ─── Proper shutdown (always do this!) ────────────────────────
+exec.shutdown();                          // stop accepting, wait for running tasks
+if (!exec.awaitTermination(60, TimeUnit.SECONDS)) {
+    List&lt;Runnable&gt; unstarted = exec.shutdownNow(); // interrupt running tasks
+}
+exec.isShutdown();    // shutdown() called?
+exec.isTerminated();  // all tasks done?
+
+// ─── ThreadPoolExecutor inspection ───────────────────────────
+((ThreadPoolExecutor) exec).getPoolSize();        // current threads
+((ThreadPoolExecutor) exec).getActiveCount();      // executing right now
+((ThreadPoolExecutor) exec).getCompletedTaskCount();
+((ThreadPoolExecutor) exec).getTaskCount();</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 5+</div><div class="footer-item">UTF-8</div><div class="footer-item">Thread Pool Management</div></div>
+</div></div>
+
+<!-- S14 -->
+<div class="section" id="s14" data-keywords="scheduledexecutor schedule fixedrate fixeddelay periodic delayed">
+<div class="section-header"><div class="section-num">14</div>
+<div class="section-info"><h2>ScheduledExecutorService</h2><p>One-shot delay, fixed-rate repetition, and fixed-delay repetition with cancellable ScheduledFuture.</p>
+<div class="tags"><span class="tag tag-purple">Scheduled</span><span class="tag tag-teal">FixedRate</span><span class="tag tag-pink">FixedDelay</span></div></div></div>
+<div class="theory">
+  <h3>🕰️ Core Theory — ScheduledExecutorService</h3>
+  <ul>
+    <li><strong>schedule():</strong> Run a task ONCE after a specified delay. Returns a <code>ScheduledFuture</code> which can be cancelled or inspected.</li>
+    <li><strong>scheduleAtFixedRate(task, initialDelay, period):</strong> Delay between the START of consecutive executions. If a task takes longer than the period, the next run starts immediately after (no overlap, tasks run sequentially). Good for heartbeats, polls.</li>
+    <li><strong>scheduleWithFixedDelay(task, initialDelay, delay):</strong> Delay between the END of one execution and the START of the next. Better when task duration is variable and you need breathing room between runs.</li>
+    <li><strong>vs Timer:</strong> <code>Timer</code> is single-threaded — one delayed task blocks all others. An uncaught exception kills the timer permanently. <code>ScheduledExecutorService</code> is multi-threaded and more robust.</li>
+    <li><strong>Exception handling:</strong> If a recurring task throws an uncaught exception, the future silently stops recurring! Always wrap task body in try-catch.</li>
+    <li><strong>ScheduledFuture.getDelay():</strong> Returns remaining delay. Negative means overdue.</li>
+    <li><strong>cancel(false):</strong> Don't interrupt if running. <code>cancel(true)</code>: interrupt if running. For recurring tasks, cancels all future executions.</li>
+  </ul>
+  <div class="tip">💡 Interview: "FixedRate = constant frequency regardless of task duration. FixedDelay = constant gap AFTER task completes. Always wrap periodic task bodies in try-catch to prevent silent death."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>ScheduledExecutorExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s14"></div>
+    <div class="code-content"><pre><code class="language-java">ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+
+// ─── schedule() — run ONCE after a delay ─────────────────────
+ScheduledFuture&lt;?&gt; once = scheduler.schedule(
+    () -&gt; System.out.println("One-shot after 500ms"),
+    500, TimeUnit.MILLISECONDS
+);
+// ScheduledFuture extends Future — can cancel, check status:
+once.getDelay(TimeUnit.MILLISECONDS); // remaining delay
+once.isDone();
+once.cancel(false);
+
+// ─── scheduleAtFixedRate() ────────────────────────────────────
+// Delay between STARTS of consecutive executions.
+// If task takes longer than period, next run starts immediately after.
+// Timeline: |---100ms---|task|----300ms----|task|----300ms----|
+ScheduledFuture&lt;?&gt; fixedRate = scheduler.scheduleAtFixedRate(
+    () -&gt; System.out.println("FixedRate tick at " + System.currentTimeMillis()),
+    100,   // initialDelay: first run after 100ms
+    300,   // period: then every 300ms (measured from START)
+    TimeUnit.MILLISECONDS
+);
+
+// ─── scheduleWithFixedDelay() ────────────────────────────────
+// Delay between END of one run and START of next.
+// Timeline: |---100ms---|task|---300ms---|task|---300ms---|
+ScheduledFuture&lt;?&gt; fixedDelay = scheduler.scheduleWithFixedDelay(
+    () -&gt; System.out.println("FixedDelay tick at " + System.currentTimeMillis()),
+    100,   // initialDelay
+    300,   // delay after task completes
+    TimeUnit.MILLISECONDS
+);
+
+Thread.sleep(1200); // let it tick several times
+fixedRate.cancel(false);   // cancel (false = don't interrupt if running)
+fixedDelay.cancel(false);
+scheduler.shutdown();</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 5+</div><div class="footer-item">UTF-8</div><div class="footer-item">Scheduled Tasks</div></div>
+</div></div>
+
+<!-- S15 -->
+<div class="section" id="s15" data-keywords="completablefuture async chain pipeline thenapply thencompose allof anyof exception handle">
+<div class="section-header"><div class="section-num">15</div>
+<div class="section-info"><h2>CompletableFuture</h2><p>Non-blocking async pipelines — creation, chaining, combining, error handling, and manual completion.</p>
+<div class="tags"><span class="tag tag-purple">CompletableFuture</span><span class="tag tag-teal">Async Pipeline</span><span class="tag tag-pink">Java 8+</span><span class="tag tag-yellow">allOf/anyOf</span></div></div></div>
+<div class="theory">
+  <h3>⚡ Core Theory — CompletableFuture</h3>
+  <div class="theory-grid">
+    <div class="theory-col"><h4>Key Concepts</h4>
+      <ul>
+        <li><strong>Non-blocking chains:</strong> Unlike <code>Future.get()</code> (always blocks), CompletableFuture chains callbacks that run when the result is ready. True async composition.</li>
+        <li><strong>thenApply vs thenCompose:</strong> <code>thenApply</code> transforms the result (like map). <code>thenCompose</code> chains CFs avoiding nesting (like flatMap). Use thenCompose when the next step returns a CF.</li>
+        <li><strong>thenAccept vs thenRun:</strong> <code>thenAccept</code> gets the result (Consumer). <code>thenRun</code> gets no result (Runnable).</li>
+        <li><strong>Async variants (thenApplyAsync):</strong> Without Async = runs in the same thread that completed the CF. With Async = submitted to ForkJoinPool.commonPool() or your executor.</li>
+        <li><strong>allOf vs anyOf:</strong> <code>allOf</code> completes when ALL complete (returns Void CF — you must get each result individually). <code>anyOf</code> completes when the FIRST completes.</li>
+      </ul>
+    </div>
+    <div class="theory-col"><h4>Error Handling</h4>
+      <ul>
+        <li><strong>exceptionally(fn):</strong> Only called on failure. Recovery function. Like catch block — chain continues with recovered value.</li>
+        <li><strong>handle(BiFunction):</strong> Always called (result or exception). Like try-finally. Returns a new value.</li>
+        <li><strong>whenComplete(BiConsumer):</strong> Always called, but result passes through unchanged. Side effects only.</li>
+        <li><strong>get() vs join():</strong> <code>get()</code> throws checked exceptions (InterruptedException, ExecutionException). <code>join()</code> throws unchecked. Prefer <code>join()</code> in lambda chains.</li>
+        <li><strong>CompletionException:</strong> Wraps the original exception in <code>join()</code>. Unwrap with <code>getCause()</code>.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tip">💡 Interview: "thenCompose = flatMap (avoids CF nesting). thenApply = map. handle() is always called. exceptionally() only on error. allOf returns Void — call .get() on each individual CF for results."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>CompletableFutureExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s15"></div>
+    <div class="code-content"><pre><code class="language-java">// ─── Creation ─────────────────────────────────────────────────
+CompletableFuture.completedFuture("instant");         // already done
+CompletableFuture.failedFuture(new RuntimeException());// already failed (Java 9+)
+CompletableFuture.runAsync(() -&gt; doWork());            // async Runnable
+CompletableFuture.runAsync(() -&gt; doWork(), myExec);   // with custom executor
+CompletableFuture&lt;Integer&gt; cf = CompletableFuture.supplyAsync(() -&gt; 42);
+CompletableFuture&lt;Integer&gt; cf2 = CompletableFuture.supplyAsync(() -&gt; 42, myExec);
+
+// ─── Transform chain ──────────────────────────────────────────
+cf.thenApply(x -&gt; x * 2)            // Function: transform result
+  .thenApply(x -&gt; "Value: " + x)    // chain more transforms
+  .thenApplyAsync(String::toUpperCase, myExec); // async transform
+
+// ─── Consume / Run ────────────────────────────────────────────
+cf.thenAccept(System.out::println);  // Consumer: consume, return Void CF
+cf.thenRun(() -&gt; log("Done!"));      // Runnable: no result access, return Void CF
+
+// ─── Combine two independent CFs ──────────────────────────────
+cf1.thenCombine(cf2, (a, b) -&gt; a + b);      // both done → combine results
+cf1.thenCompose(id -&gt; fetchUser(id));        // flatMap: avoid nesting CFs
+
+// ─── First-wins ───────────────────────────────────────────────
+cf1.applyToEither(cf2, result -&gt; "Winner: " + result);  // first → transform
+cf1.acceptEither(cf2, System.out::println);              // first → consume
+cf1.runAfterBoth(cf2, () -&gt; System.out.println("Both done!"));
+cf1.runAfterEither(cf2, () -&gt; System.out.println("One done!"));
+
+// ─── Wait for all / any ───────────────────────────────────────
+CompletableFuture.allOf(cf1, cf2, cf3)
+    .thenRun(() -&gt; System.out.println("All done!"));
+CompletableFuture.anyOf(cf1, cf2, cf3)
+    .thenAccept(result -&gt; System.out.println("First: " + result));
+
+// ─── Exception Handling ───────────────────────────────────────
+cf.exceptionally(err -&gt; -1);                            // recover on error only
+cf.handle((result, err) -&gt; err != null ? -1 : result);  // always called (try-finally)
+cf.whenComplete((r, e) -&gt; log(r, e));                   // side effect, passes through
+
+// ─── Getting result ───────────────────────────────────────────
+cf.get();                              // blocks, throws checked exceptions
+cf.get(1, TimeUnit.SECONDS);           // with timeout → TimeoutException
+cf.join();                             // blocks, throws UncheckedCompletionException
+cf.getNow(-1);                         // returns default if not complete (non-blocking)
+
+// ─── Manual completion ────────────────────────────────────────
+CompletableFuture&lt;String&gt; manual = new CompletableFuture&lt;&gt;();
+manual.complete("done");               // complete with value
+manual.completeExceptionally(ex);      // complete with error
+manual.cancel(true);                   // cancel it
+manual.obtrudeValue("force");          // force overwrite even if already complete!</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 8+</div><div class="footer-item">UTF-8</div><div class="footer-item">Async Pipeline</div></div>
+</div></div>
+<!-- S16 -->
+<div class="section" id="s16" data-keywords="producer consumer wait notify blockingqueue transfer linkedtransfer pattern">
+<div class="section-header"><div class="section-num">16</div>
+<div class="section-info"><h2>Producer-Consumer Patterns</h2><p>Classic wait/notifyAll, Lock+Condition (two separate), BlockingQueue (modern), LinkedTransferQueue (direct handoff)</p>
+<div class="tags"><span class="tag tag-purple">Producer-Consumer</span><span class="tag tag-teal">BlockingQueue</span><span class="tag tag-pink">Pattern</span></div></div></div>
+<div class="theory">
+  <h3>🟭 Core Theory — Producer-Consumer Patterns</h3>
+  <ul>
+    <li><strong>Why Producer-Consumer?</strong> Decouples producers (data generators) from consumers (data processors). Buffer absorbs speed mismatches. Enables pipelining and backpressure.</li>
+    <li><strong>Pattern 1 (wait/notifyAll):</strong> Classic but error-prone. Must use <code>while</code> (not <code>if</code>) for spurious wakeups. <code>notifyAll()</code> wakes both producers AND consumers (wasteful).</li>
+    <li><strong>Pattern 2 (Lock + 2 Conditions):</strong> <code>notFull</code> condition for producers, <code>notEmpty</code> for consumers. <code>signal()</code> (not signalAll) wakes exactly one correct waiter. More efficient.</li>
+    <li><strong>Pattern 3 (BlockingQueue):</strong> Cleanest — handles all synchronization internally. <code>put()</code> blocks if full. <code>take()</code> blocks if empty. Just use it!</li>
+    <li><strong>SynchronousQueue:</strong> Zero capacity. <code>put()</code> blocks until a consumer calls <code>take()</code>. Direct handoff — producer and consumer must be simultaneously present. Used inside <code>newCachedThreadPool()</code>!</li>
+    <li><strong>LinkedTransferQueue:</strong> Like SynchronousQueue + queue. <code>transfer()</code> = direct handoff if consumer waiting, else enqueue. <code>tryTransfer()</code> = only if consumer immediately available.</li>
+    <li><strong>PriorityBlockingQueue:</strong> Unbounded queue where elements are taken in priority order (natural ordering or Comparator). Always use bounded alternatives to avoid OOM.</li>
+  </ul>
+  <div class="tip">💡 Interview: "Use BlockingQueue in production. Avoid manual wait/notify — it's error-prone. SynchronousQueue is used inside CachedThreadPool for zero-buffer direct task handoff."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>ProducerConsumerPatterns.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s16"></div>
+    <div class="code-content"><pre><code class="language-java">// ─── Pattern 1: synchronized + wait/notifyAll ─────────────────
+class Buffer {
+    private final Queue&lt;Integer&gt; q = new LinkedList&lt;&gt;();
+    private final int CAPACITY;
+
+    public synchronized void produce(int val) throws InterruptedException {
+        while (q.size() == CAPACITY) wait();  // ALWAYS while loop (spurious wakeups!)
+        q.add(val);
+        notifyAll();   // wake consumers
+    }
+    public synchronized int consume() throws InterruptedException {
+        while (q.isEmpty()) wait();            // ALWAYS while loop
+        int val = q.poll();
+        notifyAll();   // wake producers
+        return val;
+    }
+}
+
+// ─── Pattern 2: ReentrantLock + 2 Conditions (more precise) ───
+ReentrantLock lock = new ReentrantLock();
+Condition notFull  = lock.newCondition();
+Condition notEmpty = lock.newCondition();
+
+// Producer:
+lock.lock(); try {
+    while (q.size() == CAP) notFull.await();  // wait ONLY for space
+    q.add(val); notEmpty.signal();             // wake only ONE consumer
+} finally { lock.unlock(); }
+
+// Consumer:
+lock.lock(); try {
+    while (q.isEmpty()) notEmpty.await();      // wait ONLY for item
+    int val = q.poll(); notFull.signal();      // wake only ONE producer
+} finally { lock.unlock(); }
+
+// ─── Pattern 3: BlockingQueue (cleanest — handles sync internally) ─
+BlockingQueue&lt;Integer&gt; queue = new ArrayBlockingQueue&lt;&gt;(10);
+// Producer:  queue.put(item);     // blocks if full
+// Consumer:  queue.take();        // blocks if empty
+
+// ─── Pattern 4: LinkedTransferQueue (direct handoff) ──────────
+LinkedTransferQueue&lt;String&gt; ltq = new LinkedTransferQueue&lt;&gt;();
+
+// Producer: transfer() blocks until a consumer actually takes it
+ltq.transfer("direct-message");         // guaranteed rendezvous
+ltq.tryTransfer("try");                 // non-blocking: false if no consumer
+ltq.tryTransfer("timed", 300, TimeUnit.MILLISECONDS); // timed
+ltq.getWaitingConsumerCount();          // consumers blocked in take()
+ltq.hasWaitingConsumer();
+
+// ─── Pattern 5: PriorityBlockingQueue (priority-based) ────────
+PriorityBlockingQueue&lt;Task&gt; pbq = new PriorityBlockingQueue&lt;&gt;();
+// Tasks implement Comparable — lowest priority value consumed first
+pbq.put(new Task("Low",    3));
+pbq.put(new Task("High",   1));  // consumed first!
+pbq.put(new Task("Medium", 2));
+Task t = pbq.take();             // always gets highest priority item</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 5+</div><div class="footer-item">UTF-8</div><div class="footer-item">Concurrency Pattern</div></div>
+</div></div>
+
+<!-- S17 -->
+<div class="section" id="s17" data-keywords="concurrenthashmap compute merge putifabsent atomic lock free">
+<div class="section-header"><div class="section-num">17</div>
+<div class="section-info"><h2>ConcurrentHashMap</h2><p>Lock-free reads, per-bin locking on writes, atomic compute/merge operations, bulk parallel operations.</p>
+<div class="tags"><span class="tag tag-purple">ConcurrentHashMap</span><span class="tag tag-teal">Atomic Ops</span><span class="tag tag-pink">Lock-Free</span></div></div></div>
+<div class="theory">
+  <h3>🗺️ Core Theory — ConcurrentHashMap</h3>
+  <ul>
+    <li><strong>Java 8+ internal structure:</strong> Array of bins (buckets). Short chains use linked lists. Long chains (8+ entries) convert to balanced trees (TreeBin) for O(log n) lookup.</li>
+    <li><strong>Reads are lock-free:</strong> Node values and next pointers are <code>volatile</code>. Reads use no locks — extremely fast and non-blocking.</li>
+    <li><strong>Writes use per-bin locking:</strong> Only the single affected bin (head node) is <code>synchronized</code>. Other bins are unaffected. This gives ~16x better write concurrency vs Hashtable.</li>
+    <li><strong>CAS for empty bins:</strong> Inserting into an empty bin uses Compare-And-Swap — zero contention, no locking at all.</li>
+    <li><strong>compute() is atomic:</strong> The entire function (read + compute + write) is atomic per bin. Use it instead of get+put to avoid TOCTOU races.</li>
+    <li><strong>null not allowed:</strong> Both keys and values must be non-null. Reason: in concurrent contexts, you can't distinguish "key absent" from "key mapped to null" without additional locking.</li>
+    <li><strong>size() is approximate:</strong> Under concurrent modification, <code>size()</code> may not be exact. Use <code>mappingCount()</code> (returns long) for large maps. For exact counts, use LongAdder.</li>
+  </ul>
+  <div class="tip">💡 Interview: "CHM reads are lock-free. Writes lock only the single bin. compute() and merge() are atomic. Never use null keys/values. Use mappingCount() over size() for large maps."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>ConcurrentHashMapExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s17"></div>
+    <div class="code-content"><pre><code class="language-java">ConcurrentHashMap&lt;String, Integer&gt; map = new ConcurrentHashMap&lt;&gt;();
+
+// ─── Atomic Operations (all guaranteed thread-safe) ───────────
+map.putIfAbsent("key", 1);                    // put only if absent
+map.getOrDefault("key", -1);                  // get or default
+map.remove("key", 1);                         // conditional remove
+
+// computeIfAbsent — create if not present (atomic)
+map.computeIfAbsent("key", k -&gt; expensiveInit(k));
+
+// computeIfPresent — update if present (atomic)
+map.computeIfPresent("key", (k, v) -&gt; v + 1);
+
+// compute — always applies function, null return removes key
+map.compute("key", (k, v) -&gt; v == null ? 1 : v + 1);
+
+// merge — combine new value with existing using BiFunction
+map.merge("key", 1, Integer::sum);            // 1 if absent, sum if present
+
+// replace — conditional update
+map.replace("key", oldVal, newVal);           // atomic CAS-like replace
+
+// ─── Bulk Operations (parallelismThreshold = 1 → always parallel) ─
+map.forEach(1, (k, v) -&gt; System.out.println(k + "=" + v));
+String found = map.search(1, (k, v) -&gt; v &gt; 100 ? k : null); // first non-null
+Integer total = map.reduce(1, (k, v) -&gt; v, Integer::sum);    // map + reduce
+Integer maxVal = map.reduceValues(1, Integer::max);
+String keys = map.reduceKeys(1, (a, b) -&gt; a + "," + b);
+
+// ─── Inspection ───────────────────────────────────────────────
+map.mappingCount();           // long (better than size() for huge maps)
+map.size();                   // int version
+map.isEmpty();
+map.containsKey("key");
+map.containsValue(42);
+
+// ─── Thread-safe Set view ─────────────────────────────────────
+Set&lt;String&gt; safeSet = ConcurrentHashMap.newKeySet();
+safeSet.add("A"); safeSet.add("B");
+
+// ─── Why NOT HashMap with synchronizedMap()? ──────────────────
+// synchronizedMap wraps every call with a single global lock → contention!
+// ConcurrentHashMap locks per bin (Java 8+) or uses CAS → much better!</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 8+</div><div class="footer-item">UTF-8</div><div class="footer-item">Concurrent Map</div></div>
+</div></div>
+
+<!-- S18 -->
+<div class="section" id="s18" data-keywords="blockingqueue array linked priority synchronous delay deque bounded">
+<div class="section-header"><div class="section-num">18</div>
+<div class="section-info"><h2>BlockingQueue Types</h2><p>ArrayBlockingQueue, LinkedBlockingQueue, PriorityBlockingQueue, SynchronousQueue, DelayQueue, LinkedBlockingDeque</p>
+<div class="tags"><span class="tag tag-purple">BlockingQueue</span><span class="tag tag-teal">All Types</span><span class="tag tag-pink">Blocking</span></div></div></div>
+<div class="theory">
+  <h3>📦 Core Theory — BlockingQueue Types</h3>
+  <div class="theory-grid">
+    <div class="theory-col"><h4>Queue Comparison</h4>
+      <ul>
+        <li><strong>ArrayBlockingQueue:</strong> Bounded, array-backed. Optional fairness. Fixed capacity. Best when you want backpressure and bounded memory.</li>
+        <li><strong>LinkedBlockingQueue:</strong> Optionally bounded (default unbounded = Integer.MAX_VALUE). Separate head/tail locks for producer and consumer — higher throughput than ABQ under high concurrency.</li>
+        <li><strong>PriorityBlockingQueue:</strong> Unbounded. Min-heap ordering. Elements MUST be Comparable or supply Comparator. No fairness guarantee among equal-priority elements.</li>
+        <li><strong>SynchronousQueue:</strong> Zero capacity. Direct handoff. Put blocks until take, take blocks until put. Used in newCachedThreadPool().</li>
+        <li><strong>DelayQueue:</strong> Elements only available after their delay expires. Elements implement Delayed interface. Used for scheduled task queues, caches with TTL expiration.</li>
+        <li><strong>LinkedBlockingDeque:</strong> Double-ended blocking queue. Elements can be added/removed from both ends. Useful for work-stealing algorithms.</li>
+      </ul>
+    </div>
+    <div class="theory-col"><h4>Operation Behavior</h4>
+      <ul>
+        <li><strong>put(e) / take():</strong> Block indefinitely (interrupt-capable). Use in producer/consumer threads.</li>
+        <li><strong>offer(e) / poll():</strong> Return immediately (false/null if full/empty). Use for non-blocking checks.</li>
+        <li><strong>offer(e, t, u) / poll(t, u):</strong> Timed blocking. Best for production code — avoids permanent blocking.</li>
+        <li><strong>peek():</strong> View head without removing. Non-blocking, returns null if empty.</li>
+        <li><strong>drainTo(Collection):</strong> Atomically moves all available elements to collection. Efficient batch processing.</li>
+        <li><strong>remainingCapacity():</strong> For bounded queues only. Returns available space. Useful for backpressure monitoring.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tip">💡 Interview: "Always prefer bounded queues in production to prevent OOM. Use put()/take() for blocking semantics, offer(timeout)/poll(timeout) for resilient code."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>BlockingQueueTypes.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s18"></div>
+    <div class="code-content"><pre><code class="language-java">// ─── ArrayBlockingQueue — bounded, backed by array ───────────
+ArrayBlockingQueue&lt;Integer&gt; abq = new ArrayBlockingQueue&lt;&gt;(100, true); // fair
+abq.put(1);             // blocks if full (InterruptedException)
+abq.take();             // blocks if empty (InterruptedException)
+abq.offer(1);           // non-blocking: false if full
+abq.poll();             // non-blocking: null if empty
+abq.offer(1, 500, TimeUnit.MILLISECONDS); // timed offer
+abq.poll(500, TimeUnit.MILLISECONDS);     // timed poll
+abq.peek();             // see head without removing
+abq.remainingCapacity();
+abq.drainTo(list);      // drain all to collection (atomic batch)
+
+// ─── LinkedBlockingQueue — optionally bounded ─────────────────
+new LinkedBlockingQueue&lt;&gt;();       // unbounded (Integer.MAX_VALUE capacity)
+new LinkedBlockingQueue&lt;&gt;(100);    // bounded — same API as ABQ
+
+// ─── PriorityBlockingQueue — min-heap ordering ────────────────
+PriorityBlockingQueue&lt;Integer&gt; pbq = new PriorityBlockingQueue&lt;&gt;();
+pbq.offer(30); pbq.offer(10); pbq.offer(20);
+pbq.poll(); // → 10 (smallest first)
+
+// ─── SynchronousQueue — zero capacity, direct handoff ─────────
+// put() blocks until another thread calls take() — rendezvous!
+SynchronousQueue&lt;String&gt; sq = new SynchronousQueue&lt;&gt;();
+new Thread(() -&gt; { try { sq.put("hello"); } catch(Exception e){} }).start();
+String val = sq.take(); // rendezvous!
+
+// ─── DelayQueue — elements available after delay expires ──────
+class DelayTask implements Delayed {
+    long triggerAt;
+    DelayTask(long delayMs) { triggerAt = System.currentTimeMillis() + delayMs; }
+    public long getDelay(TimeUnit u) { return u.convert(triggerAt - System.currentTimeMillis(), TimeUnit.MILLISECONDS); }
+    public int compareTo(Delayed o) { return Long.compare(triggerAt, ((DelayTask)o).triggerAt); }
+}
+DelayQueue&lt;DelayTask&gt; dq = new DelayQueue&lt;&gt;();
+dq.offer(new DelayTask(2000)); // available after 2 seconds
+DelayTask t = dq.take();       // blocks until delay expires!
+
+// ─── LinkedBlockingDeque — double-ended blocking queue ────────
+LinkedBlockingDeque&lt;String&gt; deque = new LinkedBlockingDeque&lt;&gt;(10);
+deque.putFirst("A"); deque.putLast("B");
+deque.takeFirst(); deque.takeLast();
+deque.offerFirst("X", 100, TimeUnit.MILLISECONDS);
+deque.offerLast("Y", 100, TimeUnit.MILLISECONDS);</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 5+</div><div class="footer-item">UTF-8</div><div class="footer-item">Queue Implementations</div></div>
+</div></div>
+
+<!-- S19 -->
+<div class="section" id="s19" data-keywords="atomic atomicinteger atomiclong atomicreference longadder longaccumulator cas compare swap">
+<div class="section-header"><div class="section-num">19</div>
+<div class="section-info"><h2>Atomic Variables</h2><p>Lock-free CAS operations: AtomicInteger, AtomicLong, AtomicReference, AtomicArray, LongAdder, LongAccumulator</p>
+<div class="tags"><span class="tag tag-purple">Atomic</span><span class="tag tag-teal">CAS</span><span class="tag tag-pink">Lock-Free</span><span class="tag tag-yellow">LongAdder</span></div></div></div>
+<div class="theory">
+  <h3>⚛️ Core Theory — Atomic Variables &amp; CAS</h3>
+  <ul>
+    <li><strong>CAS (Compare-And-Swap):</strong> The CPU instruction behind all atomic operations. "If current value == expected, atomically swap to new value. Otherwise fail and return the actual value." Zero blocking, hardware-level atomicity.</li>
+    <li><strong>ABA Problem:</strong> Thread reads A, another changes A→B→A, CAS succeeds despite intermediate change. Solution: <code>AtomicStampedReference</code> (adds version counter) or <code>AtomicMarkableReference</code> (adds boolean mark).</li>
+    <li><strong>compareAndSet vs compareAndExchange (Java 9):</strong> <code>compareAndSet</code> returns boolean (success/failure). <code>compareAndExchange</code> returns the <em>witness value</em> (actual current value) — easier retry loops.</li>
+    <li><strong>LongAdder vs AtomicLong:</strong> Under high contention, multiple threads CAS-ing the same AtomicLong cause cache-line bouncing (each CAS failure retries). LongAdder uses striped cells — each thread has its own cell, reducing contention. <code>sum()</code> adds all cells. ~10x faster under high contention but slightly approximate during concurrent updates.</li>
+    <li><strong>AtomicReference:</strong> CAS on object references. Use for lock-free data structures (linked lists, stacks). Be careful of ABA problem with mutable objects.</li>
+    <li><strong>VarHandle (Java 9+):</strong> Low-level variable access with memory ordering semantics. More powerful than Atomic classes. Used internally by java.util.concurrent.</li>
+  </ul>
+  <div class="tip">💡 Interview: "CAS = atomic read-compare-write in one CPU instruction. LongAdder beats AtomicLong at high contention by reducing CAS collisions via thread-local striping. AtomicStampedReference fixes ABA."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>AtomicVariablesExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s19"></div>
+    <div class="code-content"><pre><code class="language-java">// ─── AtomicInteger — all operations ──────────────────────────
+AtomicInteger ai = new AtomicInteger(0);
+ai.get();                               // read current value
+ai.set(10);                             // write value
+ai.getAndSet(20);                       // atomic swap, returns old
+ai.incrementAndGet();                   // ++count, returns new
+ai.getAndIncrement();                   // count++, returns old
+ai.decrementAndGet();                   // --count
+ai.addAndGet(5);                        // add 5, return new
+ai.getAndAdd(5);                        // add 5, return old
+ai.compareAndSet(20, 99);              // CAS: if curr==20 then set 99, return bool
+ai.compareAndExchange(99, 0);          // Java 9: CAS, returns witness value
+ai.getAndUpdate(x -&gt; x * 2);           // atomic compute, return old
+ai.updateAndGet(x -&gt; x + 1);           // atomic compute, return new
+ai.accumulateAndGet(10, Integer::sum); // atomic accumulate, return new
+
+// ─── AtomicLong, AtomicBoolean — same API ─────────────────────
+AtomicLong al = new AtomicLong(0L);
+al.incrementAndGet();
+AtomicBoolean ab = new AtomicBoolean(false);
+ab.getAndSet(true);
+ab.compareAndSet(true, false);
+
+// ─── AtomicReference ─────────────────────────────────────────
+AtomicReference&lt;String&gt; ref = new AtomicReference&lt;&gt;("initial");
+ref.compareAndSet("initial", "updated"); // CAS on objects
+ref.getAndUpdate(String::toUpperCase);
+ref.updateAndGet(s -&gt; s + "!");
+
+// ─── AtomicIntegerArray / AtomicLongArray ─────────────────────
+AtomicIntegerArray arr = new AtomicIntegerArray(10);
+arr.set(0, 5);
+arr.getAndIncrement(0);
+arr.compareAndSet(0, 6, 99);
+
+// ─── LongAdder — FASTER than AtomicLong under high contention ─
+// Uses striped cells (one per contending thread) → reduces CAS collisions
+LongAdder counter = new LongAdder();
+counter.increment();          // add 1
+counter.add(5);               // add N
+counter.sum();                // get total (approximate during contention)
+counter.reset();              // reset to 0
+counter.sumThenReset();       // atomic sum then reset
+
+// ─── LongAccumulator — custom accumulation function ───────────
+LongAccumulator maxAcc = new LongAccumulator(Long::max, Long.MIN_VALUE);
+maxAcc.accumulate(42); maxAcc.accumulate(100); maxAcc.accumulate(7);
+maxAcc.get();    // 100 (running max)
+maxAcc.reset();
+
+// ─── DoubleAdder, DoubleAccumulator ──────────────────────────
+DoubleAdder da = new DoubleAdder();
+da.add(1.5); da.add(2.5);
+da.sum(); // 4.0</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 5+</div><div class="footer-item">UTF-8</div><div class="footer-item">java.util.concurrent.atomic</div></div>
+</div></div>
+<!-- S20 Interview Q&A -->
+<div class="section" id="s20" data-keywords="interview questions answers deadlock volatile synchronized threadlocal virtual">
+<div class="section-header"><div class="section-num">20</div>
+<div class="section-info"><h2>Interview Questions &amp; Answers</h2><p>Top Java Multithreading interview questions with detailed answers. Click to expand.</p>
+<div class="tags"><span class="tag tag-purple">Interview Prep</span><span class="tag tag-teal">Q&amp;A</span><span class="tag tag-yellow">Must Know</span></div></div></div>
+<div class="theory">
+  <h3>🎤 Interview Strategy</h3>
+  <ul>
+    <li><strong>Structure your answer:</strong> (1) Define the concept. (2) Explain the problem it solves. (3) Give a concrete use case. (4) Mention gotchas/edge cases. (5) Compare alternatives.</li>
+    <li><strong>Golden rules to always mention:</strong> Use <code>while</code> not <code>if</code> with wait(). Always unlock in <code>finally</code>. Always call <code>threadLocal.remove()</code> in thread pools. Prefer BlockingQueue over manual wait/notify.</li>
+    <li><strong>Know your guarantees:</strong> volatile = visibility + ordering. synchronized = visibility + atomicity + mutual exclusion. AtomicXxx = lock-free atomicity via CAS.</li>
+  </ul>
+</div>
+<div class="qa-grid">
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q1</span><span class="qa-q-text">Process vs Thread — what's the difference?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p><strong>Process</strong>: independent execution unit with its own memory space, file handles, and resources. Processes are isolated — one crash doesn't affect others.<br><br><strong>Thread</strong>: lightweight unit of execution <em>within</em> a process. Threads share heap memory, static fields, and open files. Context switching between threads is ~10x cheaper than between processes.<br><br>Key: Multiple threads share the heap but each has its own <strong>stack, PC register, and local variables</strong>.</p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q2</span><span class="qa-q-text">volatile vs synchronized — when to use which?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p><strong>volatile</strong>: guarantees visibility + ordering. Does NOT guarantee atomicity. Use for simple flags/booleans written by one thread and read by many (e.g., <code>stopFlag</code>, double-checked locking).<br><br><strong>synchronized</strong>: guarantees visibility + atomicity + mutual exclusion. Use for compound operations like <code>count++</code>, check-then-act, or any multi-step critical section.<br><br>Rule: if the operation is a single write/read, volatile may suffice. If it's read-modify-write, use synchronized or AtomicInteger.</p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q3</span><span class="qa-q-text">Why while loop instead of if with wait()?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p><strong>Spurious wakeups</strong>: The Java specification allows threads to wake from <code>wait()</code> without <code>notify()</code> being called. This is a hardware/OS phenomenon.<br><br>Using <code>if (!condition) wait()</code> means a spurious wakeup skips the check — the thread proceeds even when the condition is false, causing bugs.<br><br>Using <code>while (!condition) wait()</code> re-checks after every wakeup. If the condition is still false, the thread goes back to sleep. <strong>Always use while.</strong></p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q4</span><span class="qa-q-text">notify() vs notifyAll() — which to use?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p><strong>notify()</strong>: wakes ONE arbitrary waiting thread. Risk: the wrong thread wakes up and goes back to sleep, causing missed signals and potential deadlock.<br><br><strong>notifyAll()</strong>: wakes ALL waiting threads. They re-check their conditions; only those whose condition is now true proceed. Safer but more overhead.<br><br><strong>Prefer notifyAll()</strong> unless: (1) all waiters are identical and (2) only one needs to proceed. Use two Condition objects with ReentrantLock for fine-grained signaling.</p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q5</span><span class="qa-q-text">How to prevent deadlock?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p>Deadlock needs all 4 Coffman conditions: mutual exclusion, hold-and-wait, no preemption, circular wait. Break any one:<br><br>1. <strong>Lock ordering</strong>: always acquire locks in the same global order across all threads.<br>2. <strong>tryLock(timeout)</strong>: back off if lock unavailable — no indefinite blocking.<br>3. <strong>Avoid nested locks</strong>: don't hold one lock while acquiring another.<br>4. <strong>Use abstractions</strong>: BlockingQueue, Semaphore avoid manual lock management.<br>5. <strong>Lock timeout + retry</strong>: with ReentrantLock.tryLock(timeout).</p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q6</span><span class="qa-q-text">CountDownLatch vs CyclicBarrier — differences?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p>
+    <table style="font-size:12px;border-collapse:collapse;width:100%">
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong></strong></td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong>CountDownLatch</strong></td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong>CyclicBarrier</strong></td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Reusable?</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">❌ One-shot</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">✅ Yes, reset()</td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Who waits?</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Main waits for N</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">All N wait for each other</td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Action on 0?</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">None</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Optional Runnable</td></tr>
+    </table>
+    </p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q7</span><span class="qa-q-text">What is ThreadLocal and when to use it?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p>ThreadLocal gives each thread its own <strong>independent copy</strong> of a variable. Changes in one thread are never visible to others — no synchronization needed.<br><br><strong>Use cases</strong>: per-request DB connections, security context, SimpleDateFormat (not thread-safe), transaction IDs, user sessions in web frameworks (Spring Security uses it!).<br><br><strong>⚠️ Critical</strong>: Always call <code>threadLocal.remove()</code> after use in thread pools! The thread is reused for the next task — leftover values cause subtle bugs and memory leaks.</p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q8</span><span class="qa-q-text">How does ConcurrentHashMap achieve thread-safety?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p>Java 8+ implementation:<br><br>• <strong>Reads</strong>: completely lock-free using volatile fields and CAS<br>• <strong>Writes</strong>: use <code>synchronized</code> on the individual <em>bin</em> (hash bucket), not the whole map<br>• <strong>CAS</strong>: Compare-And-Swap for inserting into empty bins<br>• <strong>16+ bins by default</strong>: only 1/16th of the map is locked per write<br><br>vs Hashtable: locks the ENTIRE map on every operation → huge contention.<br>vs Collections.synchronizedMap(): same — single global lock.</p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q9</span><span class="qa-q-text">What are Virtual Threads (Project Loom)?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p>Introduced in <strong>Java 21</strong>. Virtual threads are JVM-managed lightweight threads (not OS threads).<br><br>• Platform threads: 1:1 with OS threads, ~1MB stack, max ~thousands<br>• Virtual threads: M:N mapping, ~few KB, millions can coexist<br>• When virtual thread blocks (I/O), its carrier platform thread is freed for others<br>• Always daemon threads<br>• Ideal for high-throughput servers with many concurrent I/O-bound requests<br><br><code>Thread.ofVirtual().start(task)</code><br><code>Executors.newVirtualThreadPerTaskExecutor()</code></p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q10</span><span class="qa-q-text">LongAdder vs AtomicLong — when to use which?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p>
+    <strong>AtomicLong</strong>: single CAS cell, simple. Best for <strong>low-to-medium contention</strong> or when you need the exact current value (get()) or non-increment operations.<br><br>
+    <strong>LongAdder</strong>: uses <strong>striped cells</strong> — each contending thread has its own cell. sum() combines all cells. Best for <strong>high-contention counters</strong> (metrics, statistics). Much faster under heavy load.<br><br>
+    Rule: metrics/counters → LongAdder. Need CAS or exact reads → AtomicLong.
+    </p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q16</span><span class="qa-q-text">When should you use Virtual Threads vs Platform Threads?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p><strong>Virtual threads</strong> are ideal when threads spend most of their time <strong>blocking on I/O</strong> (database queries, HTTP calls, file reads). In these cases, a single JVM can handle millions of concurrent requests with the same throughput as a reactive framework — but with simpler, synchronous-looking code.<br><br><strong>Platform threads</strong> are still better for <strong>CPU-bound</strong> tasks (number crunching, encoding, compression). Virtual threads give no throughput benefit here since the CPU is always busy.<br><br><table style="font-size:12px;border-collapse:collapse;width:100%">
+<tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong></strong></td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong>Virtual Thread</strong></td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong>Platform Thread</strong></td></tr>
+<tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Stack size</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">~few KB (grows on demand)</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">~1 MB fixed</td></tr>
+<tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Max count</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Millions</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Thousands</td></tr>
+<tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Best for</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">I/O-bound (DB, HTTP)</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">CPU-bound tasks</td></tr>
+<tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Daemon?</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Always daemon</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Configurable</td></tr>
+<tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Pool them?</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">❌ No — one per task</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">✅ Yes — fixed pool</td></tr>
+</table><br><strong>Pinning:</strong> Virtual threads are pinned to carrier while inside <code>synchronized</code> blocks. Use <code>ReentrantLock</code> for lock-heavy virtual thread code to avoid pinning the carrier.</p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q11</span><span class="qa-q-text">What is a race condition and how do you prevent it?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p><strong>Race condition:</strong> When program correctness depends on the relative timing/ordering of thread execution. Result is unpredictable and often non-reproducible.<br><br><strong>Classic example:</strong> <code>count++</code> — this is read-increment-write. Two threads can read the same value, both increment, both write, losing one increment.<br><br><strong>Prevention strategies:</strong><br>1. <strong>synchronized</strong>: mutual exclusion — only one thread at a time<br>2. <strong>AtomicInteger</strong>: CAS-based lock-free update for simple counters<br>3. <strong>Immutable objects</strong>: if state can't change, no race is possible<br>4. <strong>Thread confinement</strong>: ThreadLocal — each thread has its own copy<br>5. <strong>Proper happens-before</strong>: volatile, locks, or concurrent collections that provide ordering guarantees</p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q12</span><span class="qa-q-text">What is the Java Memory Model (JMM) and happens-before?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p>The <strong>JMM</strong> defines rules for how threads interact through shared memory. Without it, CPUs and JIT compilers can reorder instructions in ways that break multithreaded code.<br><br><strong>Happens-Before (HB):</strong> If action A HB action B, then A's results are guaranteed visible to B. HB is transitive — A HB B, B HB C ⟹ A HB C.<br><br><strong>HB relationships:</strong><br>• A <code>volatile</code> write HB every subsequent read of that field<br>• <code>unlock()</code> HB every subsequent <code>lock()</code> of the same monitor<br>• <code>thread.start()</code> HB every action in the started thread<br>• <code>thread.join()</code>: all actions in thread HB after join() returns<br>• Static initializer completes HB first access to that class<br><br>Without HB, even if code looks "correct" sequentially, the JVM may reorder writes/reads causing visibility bugs.</p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q13</span><span class="qa-q-text">What is starvation and livelock? How do they differ from deadlock?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p>
+    <table style="font-size:12px;border-collapse:collapse;width:100%">
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong>Issue</strong></td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong>Definition</strong></td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong>Fix</strong></td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Deadlock</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Threads blocked forever, each waiting for the other's lock</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Lock ordering, tryLock(timeout)</td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Starvation</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Thread makes no progress because others always get priority</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Fair locks, priority adjustment</td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Livelock</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Threads actively respond to each other but make no progress (like two people yielding in a doorway)</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Random backoff, designated priority</td></tr>
+    </table>
+    </p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q14</span><span class="qa-q-text">How does ForkJoinPool differ from a regular thread pool?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p><strong>ForkJoinPool</strong> (Java 7+) is designed for divide-and-conquer algorithms using the fork-join framework.<br><br><strong>Work Stealing:</strong> Each worker thread has its own deque (double-ended queue) of tasks. When a thread finishes its work, it <em>steals</em> tasks from the tail of other threads' deques. This maximizes CPU utilization without central contention.<br><br><strong>Key differences from ThreadPoolExecutor:</strong><br>• ForkJoinPool: M worker threads, each with own deque + work stealing. Best for <strong>recursive</strong>, CPU-bound tasks that split into subtasks.<br>• ThreadPoolExecutor: N threads sharing one queue. Best for <strong>independent</strong> tasks (I/O, web requests).<br><br><strong>RecursiveTask</strong> (returns value) and <strong>RecursiveAction</strong> (void) are the ForkJoinPool task types. Use <code>fork()</code> to submit subtask, <code>join()</code> to wait for result.<br><br><code>ForkJoinPool.commonPool()</code> is shared by CompletableFuture, parallel streams, and other frameworks.</p></div></div>
+  </div>
+  <div class="qa-card" onclick="toggleQA(this)">
+    <div class="qa-q"><span class="qa-num">Q15</span><span class="qa-q-text">What is the difference between sleep() and wait()?</span><span class="qa-chevron">▼</span></div>
+    <div class="qa-a"><div class="qa-a-inner"><p>
+    <table style="font-size:12px;border-collapse:collapse;width:100%">
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong></strong></td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong>sleep(ms)</strong></td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)"><strong>wait()</strong></td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Class</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Thread (static)</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Object (instance)</td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Lock released?</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">❌ NO — holds locks!</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">✅ YES — releases monitor</td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Wake up by</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Timer expiry / interrupt</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">notify/notifyAll / interrupt</td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">Requires sync?</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">❌ NO</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">✅ YES — must be in synchronized block</td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">State</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">TIMED_WAITING</td><td style="padding:4px 8px;border:1px solid rgba(255,255,255,0.1)">WAITING or TIMED_WAITING</td></tr>
+    </table>
+    <br>Key insight: <strong>sleep() is for time-based pausing</strong>. <strong>wait() is for condition-based waiting</strong> and is always used with a <code>while</code> loop and a shared condition variable.
+    </p></div></div>
+  </div>
+</div>
+</div>
+
+<!-- S21 Virtual Threads -->
+<div class="section" id="s21" data-keywords="virtual threads loom java21 platform carrier structured concurrency lightweight io">
+<div class="section-header"><div class="section-num">21</div>
+<div class="section-info"><h2>Virtual Threads (Project Loom)</h2><p>JVM-managed lightweight threads — millions can coexist. Ideal for I/O-bound server workloads. Java 21 GA.</p>
+<div class="tags"><span class="tag tag-purple">Java 21</span><span class="tag tag-teal">Project Loom</span><span class="tag tag-pink">Virtual Threads</span><span class="tag tag-yellow">Structured Concurrency</span></div></div></div>
+<div class="theory">
+  <h3>🚀 Core Theory — Virtual Threads (Project Loom)</h3>
+  <div class="theory-grid">
+    <div class="theory-col"><h4>Platform vs Virtual Threads</h4>
+      <ul>
+        <li><strong>Platform thread:</strong> 1:1 mapping with an OS thread. ~1 MB stack. Expensive to create. Max practical ~thousands per JVM.</li>
+        <li><strong>Virtual thread:</strong> JVM-managed. Mounted onto a carrier (platform) thread from a ForkJoinPool. ~few KB of memory. Millions can coexist.</li>
+        <li><strong>M:N threading:</strong> M virtual threads multiplexed onto N carrier threads (N ≈ CPU cores). When a virtual thread blocks on I/O, its carrier is freed to run another virtual thread.</li>
+        <li><strong>Always daemon:</strong> Virtual threads are always daemon threads. Setting <code>setDaemon(false)</code> throws <code>IllegalArgumentException</code>.</li>
+        <li><strong>Thread-local works:</strong> <code>ThreadLocal</code> works but can cause memory pressure at scale (millions of copies). Prefer <code>ScopedValue</code> (Java 21 preview) instead.</li>
+      </ul>
+    </div>
+    <div class="theory-col"><h4>Key Rules &amp; Gotchas</h4>
+      <ul>
+        <li><strong>Ideal for I/O-bound work:</strong> Virtual threads shine when threads spend most time waiting (DB, HTTP, file). For CPU-bound work, they give no benefit over platform threads.</li>
+        <li><strong>Pinning:</strong> A virtual thread is <em>pinned</em> to its carrier when inside a <code>synchronized</code> block or native method. The carrier cannot be freed during pinning. Use <code>ReentrantLock</code> instead of <code>synchronized</code> for lock-heavy virtual thread code.</li>
+        <li><strong>Thread pool anti-pattern:</strong> Do NOT use a fixed pool of virtual threads — defeats the purpose. Create one-per-task with <code>newVirtualThreadPerTaskExecutor()</code>.</li>
+        <li><strong>Structured Concurrency (Java 21 preview):</strong> <code>StructuredTaskScope</code> ensures subtask lifetimes are bounded by the parent scope. Prevents orphan threads. Use <code>ShutdownOnFailure</code> or <code>ShutdownOnSuccess</code> policies.</li>
+        <li><strong>ScopedValue (Java 21 preview):</strong> Immutable per-scope data, safer and more efficient than <code>ThreadLocal</code> for virtual threads at scale.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tip">💡 Interview: "Virtual threads = JVM fiber. Blocking I/O unmounts from carrier — carrier runs other virtual threads. Use ReentrantLock not synchronized to avoid pinning. Don't pool virtual threads — create per task."</div>
+</div>
+<div class="editor">
+  <div class="editor-header"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="tab"><span class="tab-icon">☕</span>VirtualThreadsExample.java</div>
+    <div class="editor-actions"><button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button></div></div>
+  <div class="editor-body"><div class="line-numbers" id="ln-s21"></div>
+    <div class="code-content"><pre><code class="language-java">// ─── 1. Create Virtual Threads ────────────────────────────────
+// Method A: Thread.ofVirtual()
+Thread vt1 = Thread.ofVirtual().name("vt-1").start(() -> {
+    System.out.println("Running in: " + Thread.currentThread());
+    System.out.println("isVirtual: " + Thread.currentThread().isVirtual()); // true
+});
+vt1.join();
+
+// Method B: Thread.ofVirtual().unstarted() — create without starting
+Thread vt2 = Thread.ofVirtual().name("vt-2").unstarted(() -> doWork());
+vt2.start();
+vt2.join();
+
+// Method C: Thread builder with factory
+ThreadFactory factory = Thread.ofVirtual().name("worker-", 0).factory();
+Thread t = factory.newThread(() -> System.out.println("From factory"));
+t.start();
+
+// ─── 2. ExecutorService (recommended for many tasks) ──────────
+// Creates ONE virtual thread per submitted task (not a pool!)
+try (ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor()) {
+    // Submit 10,000 tasks — all run concurrently as virtual threads!
+    List&lt;Future&lt;String&gt;&gt; futures = new ArrayList&lt;&gt;();
+    for (int i = 0; i &lt; 10_000; i++) {
+        final int id = i;
+        futures.add(exec.submit(() -> {
+            Thread.sleep(100); // blocking I/O simulation — carrier freed!
+            return "Task-" + id + " done";
+        }));
+    }
+    for (Future&lt;String&gt; f : futures) System.out.println(f.get());
+} // auto-shutdown via AutoCloseable
+
+// ─── 3. Virtual thread properties ────────────────────────────
+Thread vt = Thread.ofVirtual().start(() -> {
+    Thread cur = Thread.currentThread();
+    System.out.println("isVirtual:  " + cur.isVirtual());   // true
+    System.out.println("isDaemon:   " + cur.isDaemon());    // always true!
+    System.out.println("name:       " + cur.getName());     // empty string by default
+    System.out.println("threadId:   " + cur.threadId());    // unique long ID
+});
+vt.join();
+
+// ─── 4. Pinning problem — avoid synchronized in VT code ───────
+// BAD: synchronized pins the carrier thread during I/O!
+public void badMethod() {
+    synchronized (this) {          // carrier PINNED — cannot serve other VTs
+        slowDatabaseCall();        // blocks carrier for full duration!
+    }
+}
+
+// GOOD: Use ReentrantLock — carrier is freed when VT blocks
+private final ReentrantLock lock = new ReentrantLock();
+public void goodMethod() throws InterruptedException {
+    lock.lock();
+    try {                          // carrier freed when VT blocks on I/O
+        slowDatabaseCall();        // other VTs can run on carrier!
+    } finally { lock.unlock(); }
+}
+
+// ─── 5. Structured Concurrency (Java 21 preview) ─────────────
+try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+    Subtask&lt;String&gt; user    = scope.fork(() -> fetchUser(id));
+    Subtask&lt;String&gt; orders  = scope.fork(() -> fetchOrders(id));
+
+    scope.join();           // wait for both subtasks
+    scope.throwIfFailed();  // propagate any exception
+
+    // Both subtasks succeeded:
+    process(user.get(), orders.get());
+} // scope auto-cancels any remaining subtasks on exit!
+
+// ShutdownOnSuccess: completes as soon as FIRST subtask succeeds,
+// cancels the rest — like CompletableFuture.anyOf() but structured
+try (var scope = new StructuredTaskScope.ShutdownOnSuccess&lt;String&gt;()) {
+    scope.fork(() -> queryReplica1());
+    scope.fork(() -> queryReplica2());
+    scope.join();
+    String result = scope.result(); // fastest replica wins
+}</code></pre></div></div>
+  <div class="editor-footer"><div class="footer-item"><div class="dot-status"></div>Java 21 GA</div><div class="footer-item">UTF-8</div><div class="footer-item">Project Loom</div></div>
+</div>
+</div>
+
+</div><!-- end #content -->
+</div><!-- end #main -->
+
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script>
+// Highlight.js init
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('pre code').forEach(block => {
+    hljs.highlightElement(block);
+  });
+  buildLineNumbers();
+  setupScrollSpy();
+});
+
+// Build line numbers for each editor
+function buildLineNumbers() {
+  document.querySelectorAll('.editor-body').forEach(body => {
+    const code = body.querySelector('code');
+    if (!code) return;
+    const lines = code.textContent.split('\n').length;
+    const lnEl = body.querySelector('.line-numbers');
+    if (!lnEl) return;
+    let html = '';
+    for (let i = 1; i <= lines; i++) html += `<span>${i}</span>`;
+    lnEl.innerHTML = html;
+  });
+}
+
+// Progress bar
+window.addEventListener('scroll', () => {
+  const total = document.body.scrollHeight - window.innerHeight;
+  const pct = (window.scrollY / total) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+  document.getElementById('btt').classList.toggle('show', window.scrollY > 400);
+});
+
+// Scroll spy - highlight active nav item
+function setupScrollSpy() {
+  const sections = document.querySelectorAll('.section');
+  const navItems = document.querySelectorAll('.nav-item');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        navItems.forEach(n => {
+          const onclick = n.getAttribute('onclick') || '';
+          n.classList.toggle('active', onclick.includes("'" + id + "'"));
+        });
+      }
+    });
+  }, { threshold: 0.2 });
+  sections.forEach(s => obs.observe(s));
+}
+
+// Scroll to section
+function goTo(id) {
+  const el = document.getElementById(id);
+  if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  if (window.innerWidth < 769) { document.getElementById('sidebar').classList.remove('open'); }
+}
+
+// Copy code
+function copyCode(btn) {
+  const block = btn.closest('.editor').querySelector('code');
+  navigator.clipboard.writeText(block.textContent).then(() => {
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Q&A toggle
+function toggleQA(card) {
+  card.classList.toggle('open');
+}
+
+// Search filter
+function filterSections() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('.section').forEach(s => {
+    const keywords = (s.dataset.keywords || '') + ' ' + s.querySelector('h2').textContent.toLowerCase();
+    s.style.display = (!q || keywords.includes(q)) ? '' : 'none';
+  });
+}
+
+// Theme toggle
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  const btn = document.getElementById('theme-toggle');
+  btn.textContent = isLight ? '🌑 Dark Mode' : '🌙 Dark Mode';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+// Apply saved theme on startup
+(function() {
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-mode');
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = '🌑 Dark Mode';
+  }
+})();
+
+// Sidebar toggle
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// Overlay for mobile
+document.addEventListener('click', (e) => {
+  if (window.innerWidth < 769) {
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.getElementById('hamburger');
+    if (!sidebar.contains(e.target) && e.target !== hamburger) {
+      sidebar.classList.remove('open');
+    }
+  }
+});
+</script>
+</body>
+</html>
+
+
